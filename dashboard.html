@@ -101,6 +101,25 @@
   .rollback-btn:hover{background:rgba(255,77,106,.1);border-color:var(--red);}
   .awaiting-badge{display:block;margin-top:8px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--accent2);background:rgba(0,136,255,.08);border:1px solid rgba(0,136,255,.2);border-radius:5px;padding:5px;}
 
+  /* COMMANDS PANEL */
+  .commands-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:40px;}
+  .cmd-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;animation:fadeUp .4s ease both;}
+  .cmd-label{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;}
+  .cmd-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+  .cmd-code{font-family:var(--font-mono);font-size:10px;color:var(--accent);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:6px 10px;margin-bottom:10px;word-break:break-all;}
+  .cmd-btn{width:100%;border:none;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:9px;border-radius:7px;cursor:pointer;letter-spacing:.04em;transition:opacity .15s;}
+  .cmd-btn:hover{opacity:.82;}
+  .cmd-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-blue{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#000;}
+  .btn-green{background:linear-gradient(135deg,#00a550,var(--green));color:#000;}
+  .btn-red{background:transparent;border:1px solid rgba(255,77,106,.4)!important;color:var(--red);}
+  .btn-red:hover{background:rgba(255,77,106,.1)!important;}
+  .btn-muted{background:var(--surface2);border:1px solid var(--border)!important;color:var(--muted);}
+  .btn-muted:hover{border-color:var(--text)!important;color:var(--text);}
+  .cmd-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:7px 10px;border-radius:6px;outline:none;width:90px;}
+  .cmd-input:focus{border-color:var(--accent);}
+  .cmd-input option{background:var(--surface2);}
+
   /* AUDIT LOG */
   .audit-section{margin-bottom:48px;}
   .log-container{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
@@ -150,8 +169,8 @@
   .toast{position:fixed;bottom:28px;right:28px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-size:13px;display:flex;align-items:center;gap:10px;animation:fadeUp .25s ease;box-shadow:0 8px 30px rgba(0,0,0,.4);}
   .toast.hidden{display:none;}
 
-  @media(max-width:1100px){.pipeline,.stats-row{grid-template-columns:repeat(3,1fr);}}
-  @media(max-width:700px){.pipeline,.stats-row{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:1100px){.pipeline,.stats-row,.commands-grid{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:700px){.pipeline,.stats-row,.commands-grid{grid-template-columns:repeat(2,1fr);}}
 </style>
 </head>
 <body>
@@ -176,6 +195,7 @@
         <div class="live-badge"><div class="live-dot"></div>LIVE</div>
         <div class="repo-label">andy560/finserv-issueflow-demo</div>
         <button class="scan-btn" id="scan-btn" onclick="loadAll()">↻ Refresh</button>
+        <button class="scan-btn" id="dispatch-btn" onclick="runScan()" style="background:linear-gradient(135deg,#00a550,var(--green))">⚡ Scan &amp; Scope Issues</button>
       </div>
     </div>
   </header>
@@ -253,6 +273,70 @@
     </div>
   </div>
 
+  <!-- CLI COMMANDS -->
+  <div class="section-header" style="margin-top:8px">
+    <div class="section-title">// Commands</div>
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">All actions available via button or CLI</div>
+  </div>
+  <div class="commands-grid" id="commands-grid">
+
+    <div class="cmd-card">
+      <div class="cmd-label">Scan &amp; Scope All Issues</div>
+      <div class="cmd-desc">Stage 1 — Devin analyzes every new issue and produces a scoping report. No code written.</div>
+      <div class="cmd-code">python process_issues.py --scan</div>
+      <button class="cmd-btn btn-blue" onclick="runScan()">⚡ Run Scan</button>
+    </div>
+
+    <div class="cmd-card">
+      <div class="cmd-label">Scope Single Issue</div>
+      <div class="cmd-desc">Run Stage 1 on one specific issue by number.</div>
+      <div class="cmd-code">python process_issues.py --issue &lt;number&gt;</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input class="cmd-input" id="input-scope-issue" type="number" placeholder="Issue #" min="1"/>
+        <button class="cmd-btn btn-blue" style="flex:1" onclick="scopeSingle()">🔍 Scope</button>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="cmd-label">Approve Issue</div>
+      <div class="cmd-desc">Stage 2 — dispatch a fix session to Devin after reviewing its scoping report.</div>
+      <div class="cmd-code">python process_issues.py --approve &lt;number&gt; --mode &lt;mode&gt;</div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <input class="cmd-input" id="input-approve-issue" type="number" placeholder="Issue #" min="1" style="width:80px"/>
+        <select class="cmd-input" id="input-approve-mode" style="flex:1">
+          <option value="autofix">autofix</option>
+          <option value="review">review</option>
+        </select>
+        <button class="cmd-btn btn-green" onclick="approveFromCmd()">✓ Approve</button>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="cmd-label">Rollback Issue</div>
+      <div class="cmd-desc">Close the open PR and reopen the issue for re-triage or manual handling.</div>
+      <div class="cmd-code">python process_issues.py --rollback &lt;number&gt;</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input class="cmd-input" id="input-rollback-issue" type="number" placeholder="Issue #" min="1"/>
+        <button class="cmd-btn btn-red" style="flex:1" onclick="rollbackFromCmd()">⏪ Rollback</button>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="cmd-label">Dry Run (Preview)</div>
+      <div class="cmd-desc">Preview what IssueFlow would do without dispatching any Devin sessions.</div>
+      <div class="cmd-code">python process_issues.py --scan --dry-run</div>
+      <button class="cmd-btn btn-muted" onclick="runDryRun()">👁 Dry Run</button>
+    </div>
+
+    <div class="cmd-card">
+      <div class="cmd-label">Start API Server</div>
+      <div class="cmd-desc">Run the Flask backend so this dashboard can trigger commands directly.</div>
+      <div class="cmd-code">python process_issues.py --serve</div>
+      <button class="cmd-btn btn-muted" id="backend-status-btn" onclick="checkBackend()">⚙ Check Status</button>
+    </div>
+
+  </div>
+
   <!-- AUDIT LOG -->
   <div class="audit-section">
     <div class="section-header">
@@ -262,7 +346,7 @@
     <div class="log-container">
       <div class="log-header">
         <div class="log-title">Actions &amp; Events</div>
-        <div class="live-badge"><div class="live-dot"></div>AUTO-REFRESH 30s</div>
+        <div class="live-badge"><div class="live-dot"></div>AUTO-REFRESH 60s</div>
       </div>
       <div class="log-body" id="log-body">
         <div class="log-entry">
@@ -433,6 +517,30 @@ function parseStatus(comments) {
 // ============================================================
 // LOAD
 // ============================================================
+async function runScan() {
+  if (!GITHUB_TOKEN) { document.getElementById("config-banner").classList.remove("hidden"); return; }
+  const btn = document.getElementById("dispatch-btn");
+  btn.disabled = true; btn.textContent = "Scanning…";
+
+  const alive = await backendAlive();
+  if (!alive) {
+    showToast("❌ Backend not running. Start with: python process_issues.py --serve", 5000);
+    btn.disabled = false; btn.textContent = "⚡ Scan & Scope Issues";
+    return;
+  }
+
+  const ok = await apiCall("/scan", {});
+  if (ok) {
+    showToast("🔍 Stage 1 dispatched — Devin is scoping all new issues", 4000);
+    pushAudit("scope_dispatched", "all", "IssueFlow");
+    setTimeout(loadAll, 2000);
+  } else {
+    showToast("❌ Scan failed — check terminal", 4000);
+  }
+
+  btn.disabled = false; btn.textContent = "⚡ Scan & Scope Issues";
+}
+
 async function loadAll() {
   if (!GITHUB_TOKEN) { document.getElementById("config-banner").classList.remove("hidden"); return; }
 
@@ -713,6 +821,71 @@ function pushAudit(action, issue, actor) {
   renderAuditLog();
 }
 
+async function scopeSingle() {
+  const num = parseInt(document.getElementById("input-scope-issue").value);
+  if (!num) { showToast("❌ Enter an issue number", 3000); return; }
+  const alive = await backendAlive();
+  if (!alive) { showToast("❌ Backend not running. Start with: python process_issues.py --serve", 5000); return; }
+  const ok = await apiCall("/scope", { issue_number: num });
+  if (ok) {
+    showToast(`🔍 Scoping session dispatched for #${num}`);
+    pushAudit("scope_dispatched", num, "IssueFlow");
+    setTimeout(loadAll, 1800);
+  } else {
+    showToast(`❌ Failed to scope #${num} — check terminal`, 4000);
+  }
+}
+
+async function approveFromCmd() {
+  const num  = parseInt(document.getElementById("input-approve-issue").value);
+  const mode = document.getElementById("input-approve-mode").value;
+  if (!num) { showToast("❌ Enter an issue number", 3000); return; }
+  const alive = await backendAlive();
+  if (!alive) { showToast("❌ Backend not running. Start with: python process_issues.py --serve", 5000); return; }
+  const issue = issuesData.find(i => i.number === num);
+  const ok = await apiCall("/approve", { issue_number: num, mode, scope_report: issue?.scope_report || "", actor: "engineer" });
+  if (ok) {
+    showToast(`✅ Issue #${num} approved (${mode}) — Devin dispatched`);
+    pushAudit(`approved_${mode}`, num, "engineer");
+    setTimeout(loadAll, 1800);
+  } else {
+    showToast(`❌ Approval failed for #${num} — check terminal`, 4000);
+  }
+}
+
+async function rollbackFromCmd() {
+  const num = parseInt(document.getElementById("input-rollback-issue").value);
+  if (!num) { showToast("❌ Enter an issue number", 3000); return; }
+  if (!confirm(`Roll back issue #${num}? This will close the PR and reopen the issue.`)) return;
+  await rollback(num);
+}
+
+async function runDryRun() {
+  const alive = await backendAlive();
+  if (!alive) {
+    showToast("❌ Backend not running — dry run must be triggered from CLI", 5000);
+    return;
+  }
+  // Dry run: call scan endpoint and show what would be dispatched without actually dispatching
+  showToast("👁 Dry run: open terminal and run: python process_issues.py --scan --dry-run", 6000);
+}
+
+async function checkBackend() {
+  const btn = document.getElementById("backend-status-btn");
+  btn.disabled = true; btn.textContent = "Checking…";
+  const alive = await backendAlive();
+  if (alive) {
+    showToast("✅ Backend is running at localhost:5000", 3000);
+    btn.textContent = "✅ Online";
+    btn.style.color = "var(--green)";
+  } else {
+    showToast("❌ Backend offline — run: python process_issues.py --serve", 5000);
+    btn.textContent = "❌ Offline";
+    btn.style.color = "var(--red)";
+  }
+  setTimeout(() => { btn.disabled = false; btn.textContent = "⚙ Check Status"; btn.style.color = ""; }, 4000);
+}
+
 function closeModal() { document.getElementById("modal").classList.remove("open"); }
 function maybeCloseModal(e) { if (e.target===document.getElementById("modal")) closeModal(); }
 
@@ -737,7 +910,7 @@ function showToast(msg, ms=3000) {
 // ============================================================
 // AUTO REFRESH + INIT
 // ============================================================
-setInterval(loadAll, 30000);
+setInterval(loadAll, 60000);
 if (GITHUB_TOKEN) loadAll();
 </script>
 </body>
