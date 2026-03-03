@@ -39,11 +39,11 @@ except ImportError:
 # CONFIGURATION
 # ============================================================
 
-GITHUB_TOKEN  = "YOUR_GITHUB_TOKEN_HERE"
+GITHUB_TOKEN  = "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"
 GITHUB_REPO   = "andy560/finserv-issueflow-demo"
 
-DEVIN_API_KEY = "YOUR_DEVIN_API_KEY_HERE"
-DEVIN_ORG_ID  = "YOUR_DEVIN_ORG_ID_HERE"
+DEVIN_API_KEY = "cog_r7h3xpb6i22c7tppboxzvyiuynvgwyikophsndzqwdhgcruyuc7q"
+DEVIN_ORG_ID  = "org-94b19ab6886f4659a9275f4b0f0d1b4c"
 
 STATE_FILE = Path("issueflow_state.json")
 
