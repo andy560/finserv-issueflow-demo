@@ -8,13 +8,19 @@ Stage 2 (Fix):   Triggered after human approval. Devin implements
                  English summary.
 
 Setup:
-    pip install requests flask flask-cors
+    pip install requests flask flask-cors python-dotenv
+
+    Create a .env file in the same folder with:
+        GITHUB_TOKEN=ghp_...
+        DEVIN_API_KEY=cog_...
+        DEVIN_ORG_ID=org_...
 
 Usage:
-    python process_issues.py --scan          # Stage 1 all open issues
-    python process_issues.py --issue 3       # Stage 1 single issue
+    python process_issues.py --scan          # Stage 1: scope all open issues
+    python process_issues.py --issue 3       # Stage 1: scope a single issue
     python process_issues.py --serve         # Run API server for dashboard
     python process_issues.py --approve 3 --mode autofix
+    python process_issues.py --approve 3 --mode review
     python process_issues.py --rollback 3
     python process_issues.py --scan --dry-run
 """
@@ -26,7 +32,14 @@ import time
 import threading
 from datetime import datetime
 from pathlib import Path
+
 import requests
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 try:
     from flask import Flask, jsonify, request as flask_request
@@ -36,16 +49,26 @@ except ImportError:
     FLASK_AVAILABLE = False
 
 # ============================================================
-# CONFIGURATION
+# CONFIGURATION — loaded from .env file, never hardcoded
 # ============================================================
 
-GITHUB_TOKEN  = "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"
+GITHUB_TOKEN  = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_REPO   = "andy560/finserv-issueflow-demo"
 
-DEVIN_API_KEY = "cog_r7h3xpb6i22c7tppboxzvyiuynvgwyikophsndzqwdhgcruyuc7q"
-DEVIN_ORG_ID  = "org-94b19ab6886f4659a9275f4b0f0d1b4c"
+DEVIN_API_KEY = os.environ.get("DEVIN_API_KEY", "")
+DEVIN_ORG_ID  = os.environ.get("DEVIN_ORG_ID", "")
 
 STATE_FILE = Path("issueflow_state.json")
+
+def check_config():
+    missing = []
+    if not GITHUB_TOKEN:  missing.append("GITHUB_TOKEN")
+    if not DEVIN_API_KEY: missing.append("DEVIN_API_KEY")
+    if not DEVIN_ORG_ID:  missing.append("DEVIN_ORG_ID")
+    if missing:
+        print(f"❌ Missing environment variables: {', '.join(missing)}")
+        print(f"   Create a .env file with these values. See README for details.")
+        raise SystemExit(1)
 
 # ============================================================
 # STATE
@@ -74,30 +97,47 @@ def log_audit(state, action, issue_number, detail="", actor="IssueFlow"):
 # ============================================================
 
 def gh_headers():
-    return {"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github+json"}
+    return {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json"
+    }
 
 def get_all_open_issues():
-    r = requests.get(f"https://api.github.com/repos/{GITHUB_REPO}/issues",
-                     headers=gh_headers(), params={"state": "open", "per_page": 50})
+    r = requests.get(
+        f"https://api.github.com/repos/{GITHUB_REPO}/issues",
+        headers=gh_headers(),
+        params={"state": "open", "per_page": 50}
+    )
     r.raise_for_status()
     return [i for i in r.json() if "pull_request" not in i]
 
 def get_single_issue(number):
-    r = requests.get(f"https://api.github.com/repos/{GITHUB_REPO}/issues/{number}",
-                     headers=gh_headers())
+    r = requests.get(
+        f"https://api.github.com/repos/{GITHUB_REPO}/issues/{number}",
+        headers=gh_headers()
+    )
     r.raise_for_status()
     return r.json()
 
 def post_github_comment(number, body):
-    r = requests.post(f"https://api.github.com/repos/{GITHUB_REPO}/issues/{number}/comments",
-                      headers=gh_headers(), json={"body": body})
+    r = requests.post(
+        f"https://api.github.com/repos/{GITHUB_REPO}/issues/{number}/comments",
+        headers=gh_headers(),
+        json={"body": body}
+    )
     r.raise_for_status()
 
 def close_pr_and_reopen_issue(pr_number, issue_number):
-    requests.patch(f"https://api.github.com/repos/{GITHUB_REPO}/pulls/{pr_number}",
-                   headers=gh_headers(), json={"state": "closed"})
-    requests.patch(f"https://api.github.com/repos/{GITHUB_REPO}/issues/{issue_number}",
-                   headers=gh_headers(), json={"state": "open"})
+    requests.patch(
+        f"https://api.github.com/repos/{GITHUB_REPO}/pulls/{pr_number}",
+        headers=gh_headers(),
+        json={"state": "closed"}
+    )
+    requests.patch(
+        f"https://api.github.com/repos/{GITHUB_REPO}/issues/{issue_number}",
+        headers=gh_headers(),
+        json={"state": "open"}
+    )
 
 # ============================================================
 # CLASSIFICATION
@@ -209,7 +249,7 @@ A scoping report was reviewed and approved by the engineering team:
 3. Run: pytest
 4. All tests must pass. Do NOT modify any test files.
 5. Commit: "fix: resolve issue #{issue['number']} - {issue['title']}"
-6. Push branch and open a pull request.
+6. Push branch and open a pull request referencing issue #{issue['number']}.
 
 ## PR Description — write it like a real engineer, plain English, under 150 words:
 - What was broken and why (one sentence)
@@ -286,19 +326,19 @@ def approve_issue(issue_number, mode, scope_report=None, actor="engineer"):
         return
 
     if mode == "manual":
-        entry["status"] = "manual"
-        entry["decision"] = "manual"
+        entry["status"]     = "manual"
+        entry["decision"]   = "manual"
         entry["updated_at"] = datetime.utcnow().isoformat() + "Z"
         log_audit(state, "marked_manual", num, "Engineer chose to handle manually", actor=actor)
         save_state(state)
         print(f"📋 Issue #{num} marked for manual handling.")
         return
 
-    report = scope_report or entry.get("scope_report") or "(Scoping report pending)"
+    report     = scope_report or entry.get("scope_report") or "(Scoping report pending)"
     issue_data = {"number": int(num), "title": entry["title"], "body": entry["body"]}
 
     print(f"🤖 Dispatching Stage 2 fix session for issue #{num} (mode: {mode})...")
-    result = devin_post("sessions", {"prompt": build_fix_prompt(issue_data, report, mode)})
+    result     = devin_post("sessions", {"prompt": build_fix_prompt(issue_data, report, mode)})
     session_id = result.get("session_id") or result.get("id")
 
     entry["status"]         = "fixing"
@@ -322,7 +362,7 @@ def approve_issue(issue_number, mode, scope_report=None, actor="engineer"):
 
 def rollback_issue(issue_number, actor="engineer"):
     state = load_state()
-    num = str(issue_number)
+    num   = str(issue_number)
     entry = state["issues"].get(num)
 
     if not entry or not entry.get("pr_number"):
@@ -331,7 +371,7 @@ def rollback_issue(issue_number, actor="engineer"):
 
     print(f"⏪ Rolling back issue #{num} — closing PR #{entry['pr_number']}...")
     close_pr_and_reopen_issue(entry["pr_number"], int(num))
-    entry["status"] = "rolled_back"
+    entry["status"]     = "rolled_back"
     entry["updated_at"] = datetime.utcnow().isoformat() + "Z"
     log_audit(state, "rolled_back", num, f"PR #{entry['pr_number']} closed", actor=actor)
     save_state(state)
@@ -344,25 +384,26 @@ def rollback_issue(issue_number, actor="engineer"):
 def poll_sessions():
     while True:
         try:
-            state = load_state()
+            state   = load_state()
             changed = False
 
             for num, entry in state["issues"].items():
+
                 # Poll scope sessions
                 if entry["status"] == "scoping" and entry.get("scope_session_id"):
                     sid = entry["scope_session_id"]
                     if sid.startswith("dry-run"):
                         continue
                     try:
-                        session = devin_get_session(sid)
+                        session  = devin_get_session(sid)
                         if session.get("status") in ("finished", "completed", "stopped"):
                             messages = session.get("messages") or []
-                            report = next(
+                            report   = next(
                                 (m.get("content", "") for m in reversed(messages)
                                  if m.get("role") == "assistant"), "")
                             entry["scope_report"] = report
-                            entry["status"] = "awaiting_approval"
-                            entry["updated_at"] = datetime.utcnow().isoformat() + "Z"
+                            entry["status"]       = "awaiting_approval"
+                            entry["updated_at"]   = datetime.utcnow().isoformat() + "Z"
                             log_audit(state, "scope_complete", num, "Scoping report ready")
                             changed = True
                     except Exception:
@@ -374,19 +415,19 @@ def poll_sessions():
                     if sid.startswith("dry-run"):
                         continue
                     try:
-                        session = devin_get_session(sid)
+                        session  = devin_get_session(sid)
                         if session.get("status") in ("finished", "completed", "stopped"):
-                            pr_url = session.get("pull_request_url") or ""
+                            pr_url    = session.get("pull_request_url") or ""
                             pr_number = None
                             if pr_url:
                                 try:
                                     pr_number = int(pr_url.rstrip("/").split("/")[-1])
                                 except Exception:
                                     pass
-                            entry["status"]    = "pr_open" if pr_url else "fix_complete"
-                            entry["pr_url"]    = pr_url
-                            entry["pr_number"] = pr_number
-                            entry["updated_at"]= datetime.utcnow().isoformat() + "Z"
+                            entry["status"]     = "pr_open" if pr_url else "fix_complete"
+                            entry["pr_url"]     = pr_url
+                            entry["pr_number"]  = pr_number
+                            entry["updated_at"] = datetime.utcnow().isoformat() + "Z"
                             log_audit(state, "pr_opened", num, f"PR: {pr_url}")
                             changed = True
                     except Exception:
@@ -394,6 +435,7 @@ def poll_sessions():
 
             if changed:
                 save_state(state)
+
         except Exception as e:
             print(f"[poll] {e}")
 
@@ -417,10 +459,10 @@ def run_server():
             gh_issues = get_all_open_issues()
         except Exception as e:
             return jsonify({"error": str(e)}), 500
-        state = load_state()
+        state  = load_state()
         result = []
         for issue in gh_issues:
-            num = str(issue["number"])
+            num   = str(issue["number"])
             entry = state["issues"].get(num, {})
             result.append({
                 "number":           issue["number"],
@@ -449,7 +491,7 @@ def run_server():
     def api_scan():
         try:
             issues = get_all_open_issues()
-            state = load_state()
+            state  = load_state()
             for issue in issues:
                 if str(issue["number"]) not in state["issues"]:
                     dispatch_scope_session(issue)
@@ -461,9 +503,12 @@ def run_server():
     def api_approve():
         data = flask_request.json
         try:
-            approve_issue(data["issue_number"], data["mode"],
-                          scope_report=data.get("scope_report"),
-                          actor=data.get("actor", "engineer"))
+            approve_issue(
+                data["issue_number"],
+                data["mode"],
+                scope_report=data.get("scope_report"),
+                actor=data.get("actor", "engineer")
+            )
             return jsonify({"ok": True})
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -497,21 +542,23 @@ def run_server():
 # ============================================================
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--scan",     action="store_true")
-    parser.add_argument("--issue",    type=int)
-    parser.add_argument("--approve",  type=int)
-    parser.add_argument("--mode",     default="autofix", help="autofix | review | manual")
-    parser.add_argument("--rollback", type=int)
-    parser.add_argument("--serve",    action="store_true")
-    parser.add_argument("--dry-run",  action="store_true")
+    parser = argparse.ArgumentParser(description="IssueFlow — autonomous issue resolution via Devin")
+    parser.add_argument("--scan",     action="store_true", help="Stage 1: scope all open issues")
+    parser.add_argument("--issue",    type=int,            help="Stage 1: scope a single issue by number")
+    parser.add_argument("--approve",  type=int,            help="Stage 2: approve an issue for fixing")
+    parser.add_argument("--mode",     default="autofix",   help="autofix | review | manual")
+    parser.add_argument("--rollback", type=int,            help="Close PR and reopen issue")
+    parser.add_argument("--serve",    action="store_true", help="Run Flask API server for dashboard")
+    parser.add_argument("--dry-run",  action="store_true", help="Preview without dispatching to Devin")
     args = parser.parse_args()
+
+    check_config()
 
     if args.serve:
         run_server()
     elif args.scan:
         issues = get_all_open_issues()
-        print(f"Found {len(issues)} open issues")
+        print(f"Found {len(issues)} open issue(s)")
         for issue in issues:
             dispatch_scope_session(issue, dry_run=args.dry_run)
     elif args.issue:
