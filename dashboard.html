@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IssueFlow — Autonomous Issue Resolution</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:#0a0e17;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;
+    --accent:#00d4ff;--accent2:#0088ff;--green:#00e5a0;--yellow:#ffc040;
+    --red:#ff4d6a;--purple:#a78bfa;--text:#e2e8f0;--muted:#64748b;
+    --font-mono:'IBM Plex Mono',monospace;--font-sans:'IBM Plex Sans',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .wrapper{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 28px;}
+
+  /* HEADER */
+  header{border-bottom:1px solid var(--border);padding:18px 0;margin-bottom:28px;}
+  .header-inner{display:flex;align-items:center;justify-content:space-between;}
+  .logo{display:flex;align-items:center;gap:12px;}
+  .logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+  .logo-text{font-family:var(--font-mono);font-size:17px;font-weight:600;}
+  .logo-text span{color:var(--accent);}
+  .header-right{display:flex;align-items:center;gap:14px;}
+  .live-badge{display:flex;align-items:center;gap:6px;color:var(--green);font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.06em;}
+  .live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
+  .repo-label{font-family:var(--font-mono);font-size:11px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:5px 12px;border-radius:6px;}
+  .scan-btn{background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;color:#000;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:8px 18px;border-radius:7px;cursor:pointer;letter-spacing:.05em;transition:opacity .15s;}
+  .scan-btn:hover{opacity:.82;}
+  .scan-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* CONFIG BANNER */
+  .config-banner{background:rgba(255,192,64,.08);border:1px solid rgba(255,192,64,.25);border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:12px;margin-bottom:24px;font-size:12px;}
+  .config-banner.hidden{display:none;}
+  .config-banner input{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:7px 12px;border-radius:6px;outline:none;}
+  .config-banner input:focus{border-color:var(--accent);}
+  .config-save{background:var(--yellow);border:none;color:#000;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:8px 16px;border-radius:6px;cursor:pointer;white-space:nowrap;}
+
+  /* STATS */
+  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:30px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;animation:fadeUp .4s ease both;}
+  .stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .stat-card.blue::after{background:linear-gradient(90deg,var(--accent2),var(--accent));}
+  .stat-card.yellow::after{background:var(--yellow);}
+  .stat-card.purple::after{background:var(--purple);}
+  .stat-card.green::after{background:var(--green);}
+  .stat-card.red::after{background:var(--red);}
+  .stat-label{font-size:10px;font-family:var(--font-mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+  .stat-value{font-size:30px;font-weight:600;font-family:var(--font-mono);line-height:1;margin-bottom:4px;}
+  .stat-card.blue .stat-value{color:var(--accent);}
+  .stat-card.yellow .stat-value{color:var(--yellow);}
+  .stat-card.purple .stat-value{color:var(--purple);}
+  .stat-card.green .stat-value{color:var(--green);}
+  .stat-card.red .stat-value{color:var(--red);}
+  .stat-sub{font-size:11px;color:var(--muted);}
+
+  /* SECTION HEADER */
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .section-title{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+
+  /* PIPELINE */
+  .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:40px;}
+  .pipeline-col{animation:fadeUp .5s ease both;}
+  .col-header{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;background:var(--surface2);}
+  .col-label{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;}
+  .col-dot{width:7px;height:7px;border-radius:50%;}
+  .col-new      .col-dot{background:var(--muted);}
+  .col-scoping  .col-dot{background:var(--yellow);animation:pulse 2s infinite;}
+  .col-awaiting .col-dot{background:var(--accent2);}
+  .col-fixing   .col-dot{background:var(--purple);animation:pulse 2s infinite;}
+  .col-done     .col-dot{background:var(--green);}
+  .col-count{font-family:var(--font-mono);font-size:10px;background:var(--border);padding:2px 7px;border-radius:8px;color:var(--muted);}
+  .col-body{border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;background:rgba(17,24,39,.5);min-height:240px;padding:10px;display:flex;flex-direction:column;gap:8px;}
+  .col-empty{text-align:center;padding:32px 0;color:var(--muted);font-family:var(--font-mono);font-size:10px;}
+
+  /* ISSUE CARD */
+  .issue-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:all .18s;animation:fadeUp .35s ease both;}
+  .issue-card:hover{border-color:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,136,255,.1);}
+  .issue-number{font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:5px;}
+  .issue-title{font-size:12px;font-weight:500;line-height:1.4;margin-bottom:8px;color:var(--text);}
+  .tag-row{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px;}
+  .tag{font-family:var(--font-mono);font-size:9px;padding:2px 7px;border-radius:4px;font-weight:500;}
+  .tag-bug{background:rgba(255,77,106,.12);color:var(--red);border:1px solid rgba(255,77,106,.25);}
+  .tag-low{background:rgba(0,229,160,.08);color:var(--green);border:1px solid rgba(0,229,160,.2);}
+  .tag-medium{background:rgba(255,192,64,.08);color:var(--yellow);border:1px solid rgba(255,192,64,.2);}
+  .tag-auto{background:rgba(0,136,255,.08);color:var(--accent);border:1px solid rgba(0,136,255,.2);}
+  .tag-manual{background:rgba(100,116,139,.1);color:var(--muted);border:1px solid rgba(100,116,139,.2);}
+  .issue-time{font-family:var(--font-mono);font-size:10px;color:var(--muted);}
+  .progress-wrap{margin-top:8px;}
+  .progress-label{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-bottom:4px;}
+  .progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--purple));border-radius:2px;animation:shimmer 2s ease-in-out infinite alternate;}
+  @keyframes shimmer{from{opacity:.7}to{opacity:1}}
+  .pr-link{display:inline-flex;align-items:center;gap:5px;margin-top:7px;font-family:var(--font-mono);font-size:10px;color:var(--green);text-decoration:none;}
+  .pr-link:hover{text-decoration:underline;}
+  .rollback-btn{width:100%;margin-top:6px;background:transparent;border:1px solid rgba(255,77,106,.3);color:var(--red);font-family:var(--font-mono);font-size:10px;padding:6px;border-radius:5px;cursor:pointer;transition:all .15s;}
+  .rollback-btn:hover{background:rgba(255,77,106,.1);border-color:var(--red);}
+  .awaiting-badge{display:block;margin-top:8px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--accent2);background:rgba(0,136,255,.08);border:1px solid rgba(0,136,255,.2);border-radius:5px;padding:5px;}
+
+  /* AUDIT LOG */
+  .audit-section{margin-bottom:48px;}
+  .log-container{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .log-header{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2);}
+  .log-title{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+  .log-body{max-height:280px;overflow-y:auto;}
+  .log-entry{display:flex;align-items:flex-start;gap:12px;padding:9px 18px;border-bottom:1px solid rgba(30,45,69,.5);transition:background .12s;}
+  .log-entry:hover{background:rgba(255,255,255,.015);}
+  .log-entry:last-child{border-bottom:none;}
+  .log-time{font-family:var(--font-mono);font-size:10px;color:var(--muted);white-space:nowrap;padding-top:2px;min-width:150px;}
+  .log-actor{font-family:var(--font-mono);font-size:10px;color:var(--accent2);min-width:80px;padding-top:2px;}
+  .log-icon{font-size:13px;padding-top:1px;}
+  .log-text{font-size:12px;line-height:1.5;color:var(--text);flex:1;}
+  .log-text strong{color:var(--accent);font-weight:500;}
+  .log-text .ok{color:var(--green);}
+  .log-text .warn{color:var(--yellow);}
+  .log-text .ref{color:var(--purple);font-family:var(--font-mono);font-size:11px;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);z-index:100;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:640px;max-width:94vw;max-height:88vh;overflow-y:auto;padding:30px;animation:fadeUp .2s ease;}
+  .modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
+  .modal-num{font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:5px;}
+  .modal-title{font-size:16px;font-weight:600;line-height:1.4;}
+  .modal-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0 4px;line-height:1;}
+  .modal-section{margin-bottom:18px;}
+  .modal-label{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;}
+  .modal-value{font-size:12px;line-height:1.7;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;white-space:pre-wrap;font-family:var(--font-mono);}
+  .modal-value.loading{color:var(--muted);font-style:italic;}
+  .decision-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:20px;}
+  .btn-autofix{background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;color:#000;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:12px 8px;border-radius:8px;cursor:pointer;letter-spacing:.04em;transition:opacity .15s;}
+  .btn-autofix:hover{opacity:.83;}
+  .btn-review{background:transparent;border:1px solid var(--purple);color:var(--purple);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:12px 8px;border-radius:8px;cursor:pointer;transition:all .15s;}
+  .btn-review:hover{background:rgba(167,139,250,.1);}
+  .btn-manual{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:12px 8px;border-radius:8px;cursor:pointer;transition:all .15s;}
+  .btn-manual:hover{border-color:var(--muted);color:var(--text);}
+  .devin-link{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--accent2);text-decoration:none;margin-top:10px;}
+  .devin-link:hover{text-decoration:underline;}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:28px;right:28px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-size:13px;display:flex;align-items:center;gap:10px;animation:fadeUp .25s ease;box-shadow:0 8px 30px rgba(0,0,0,.4);}
+  .toast.hidden{display:none;}
+
+  @media(max-width:1100px){.pipeline,.stats-row{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:700px){.pipeline,.stats-row{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- CONFIG BANNER -->
+  <div class="config-banner" id="config-banner">
+    <span style="color:var(--yellow)">⚠</span>
+    <span style="color:var(--yellow);font-family:var(--font-mono);white-space:nowrap">GitHub Token:</span>
+    <input type="password" id="token-input" placeholder="Paste your GitHub token (ghp_...)"/>
+    <button class="config-save" onclick="saveToken()">Save &amp; Load</button>
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">Issue<span>Flow</span></div>
+      </div>
+      <div class="header-right">
+        <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+        <div class="repo-label">andy560/finserv-issueflow-demo</div>
+        <button class="scan-btn" id="scan-btn" onclick="loadAll()">↻ Refresh</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card blue">
+      <div class="stat-label">Total Open</div>
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-sub">GitHub issues</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-label">Awaiting Approval</div>
+      <div class="stat-value" id="stat-awaiting">—</div>
+      <div class="stat-sub">scoped, need decision</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">In Progress</div>
+      <div class="stat-value" id="stat-fixing">—</div>
+      <div class="stat-sub">Devin sessions active</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">PR Opened</div>
+      <div class="stat-value" id="stat-done">—</div>
+      <div class="stat-sub">ready for review</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">Manual</div>
+      <div class="stat-value" id="stat-manual">—</div>
+      <div class="stat-sub">flagged for engineer</div>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="section-header">
+    <div class="section-title">// Resolution Pipeline</div>
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted)" id="last-refresh">Not loaded yet</div>
+  </div>
+
+  <div class="pipeline">
+    <div class="pipeline-col col-new">
+      <div class="col-header">
+        <div class="col-label"><div class="col-dot"></div>New</div>
+        <div class="col-count" id="cnt-new">0</div>
+      </div>
+      <div class="col-body" id="col-new"></div>
+    </div>
+    <div class="pipeline-col col-scoping">
+      <div class="col-header">
+        <div class="col-label"><div class="col-dot"></div>Scoping</div>
+        <div class="col-count" id="cnt-scoping">0</div>
+      </div>
+      <div class="col-body" id="col-scoping"></div>
+    </div>
+    <div class="pipeline-col col-awaiting">
+      <div class="col-header">
+        <div class="col-label"><div class="col-dot"></div>Awaiting Approval</div>
+        <div class="col-count" id="cnt-awaiting">0</div>
+      </div>
+      <div class="col-body" id="col-awaiting"></div>
+    </div>
+    <div class="pipeline-col col-fixing">
+      <div class="col-header">
+        <div class="col-label"><div class="col-dot"></div>Devin Fixing</div>
+        <div class="col-count" id="cnt-fixing">0</div>
+      </div>
+      <div class="col-body" id="col-fixing"></div>
+    </div>
+    <div class="pipeline-col col-done">
+      <div class="col-header">
+        <div class="col-label"><div class="col-dot"></div>PR Open</div>
+        <div class="col-count" id="cnt-done">0</div>
+      </div>
+      <div class="col-body" id="col-done"></div>
+    </div>
+  </div>
+
+  <!-- AUDIT LOG -->
+  <div class="audit-section">
+    <div class="section-header">
+      <div class="section-title">// Audit Log</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">Every action timestamped &amp; attributed</div>
+    </div>
+    <div class="log-container">
+      <div class="log-header">
+        <div class="log-title">Actions &amp; Events</div>
+        <div class="live-badge"><div class="live-dot"></div>AUTO-REFRESH 30s</div>
+      </div>
+      <div class="log-body" id="log-body">
+        <div class="log-entry">
+          <div class="log-text" style="color:var(--muted)">Paste your GitHub token above and click Save &amp; Load to begin…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="maybeCloseModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-num" id="modal-num"></div>
+        <div class="modal-title" id="modal-title"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">Issue Description</div>
+      <div class="modal-value" id="modal-body"></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">Devin Scoping Report</div>
+      <div class="modal-value" id="modal-scope"></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">IssueFlow Classification</div>
+      <div class="modal-value" id="modal-class"></div>
+    </div>
+    <div id="modal-devin-link"></div>
+    <div id="modal-actions"></div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const GITHUB_REPO = "andy560/finserv-issueflow-demo";
+const API_BASE    = "http://localhost:5000/api";
+
+let GITHUB_TOKEN = localStorage.getItem("gh_token") || "";
+let issuesData   = [];
+let auditData    = [];
+let currentModal = null;
+
+if (GITHUB_TOKEN) document.getElementById("config-banner").classList.add("hidden");
+
+function saveToken() {
+  GITHUB_TOKEN = document.getElementById("token-input").value.trim();
+  if (!GITHUB_TOKEN) return;
+  localStorage.setItem("gh_token", GITHUB_TOKEN);
+  document.getElementById("config-banner").classList.add("hidden");
+  loadAll();
+}
+
+// ============================================================
+// GITHUB API
+// ============================================================
+function ghH() {
+  return { "Authorization": `Bearer ${GITHUB_TOKEN}`, "Accept": "application/vnd.github+json" };
+}
+
+async function ghFetch(path) {
+  const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}${path}`, { headers: ghH() });
+  if (!r.ok) throw new Error(`GitHub ${r.status}`);
+  return r.json();
+}
+
+async function ghPost(path, body) {
+  const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}${path}`, {
+    method: "POST", headers: { ...ghH(), "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  return r.ok;
+}
+
+// ============================================================
+// BACKEND (process_issues.py --serve)
+// ============================================================
+async function backendAlive() {
+  try {
+    const r = await fetch(`${API_BASE}/audit`, { signal: AbortSignal.timeout(1500) });
+    return r.ok;
+  } catch { return false; }
+}
+
+async function apiCall(path, body) {
+  try {
+    const r = await fetch(`${API_BASE}${path}`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    return r.ok ? r.json() : null;
+  } catch { return null; }
+}
+
+// ============================================================
+// CLASSIFICATION
+// ============================================================
+const RISKY = ["database","migration","schema","production","security",
+               "auth token","payment","deploy","infrastructure","refactor",
+               "breaking change","architecture","credentials","encryption"];
+
+function classify(issue) {
+  const text = ((issue.title||"")+" "+(issue.body||"")).toLowerCase();
+  const flags = RISKY.filter(k => text.includes(k));
+  const safe  = !flags.length && (issue.body||"").length < 600;
+  return {
+    safe_for_autofix: safe,
+    risk_flags: flags,
+    complexity: (issue.body||"").length < 200 ? "low" : "medium",
+    reason: safe ? "No risk flags detected" : `Risk flags: ${flags.join(", ")}`
+  };
+}
+
+function guessFile(issue) {
+  const t = issue.title.toLowerCase();
+  if (["divide","interest","discount","calculator"].some(k=>t.includes(k))) return "calculator.py";
+  if (["email","mask","account","auth","password"].some(k=>t.includes(k)))  return "auth.py";
+  if (["currency","format","truncate","date","utils"].some(k=>t.includes(k)))return "utils.py";
+  return "unknown";
+}
+
+// ============================================================
+// DERIVE STATUS FROM GITHUB COMMENTS
+// ============================================================
+function parseStatus(comments) {
+  const bot = comments.filter(c => c.body && c.body.includes("IssueFlow"));
+  if (!bot.length) return { status:"new", scope_report:null, scope_session_id:null, fix_session_id:null, pr_url:null };
+
+  let status="new", scope_report=null, scope_session_id=null, fix_session_id=null, pr_url=null;
+
+  for (const c of bot) {
+    const b = c.body;
+    if (b.includes("Stage 1") && b.includes("Scoping")) {
+      status = "scoping";
+      const m = b.match(/sessions\/([\w-]+)/);
+      if (m) scope_session_id = m[1];
+    }
+    if (b.includes("Root Cause") || b.includes("SCOPING REPORT")) {
+      status = "awaiting_approval";
+      const idx = b.indexOf("## Root Cause");
+      if (idx !== -1) scope_report = b.slice(idx);
+    }
+    if (b.includes("Stage 2") && b.includes("Fix Approved")) {
+      status = "fixing";
+      const m = b.match(/sessions\/([\w-]+)/g);
+      if (m && m.length > 1) fix_session_id = m[1].replace("sessions/","");
+    }
+    if (b.includes("pull request") || b.includes("PR #") || b.includes("PR opened")) {
+      status = "pr_open";
+      const m = b.match(/https:\/\/github\.com\/[^\s)]+\/pull\/\d+/);
+      if (m) pr_url = m[0];
+    }
+    if (b.includes("Handle Manually") || b.includes("manual handling")) {
+      status = "manual";
+    }
+  }
+  return { status, scope_report, scope_session_id, fix_session_id, pr_url };
+}
+
+// ============================================================
+// LOAD
+// ============================================================
+async function loadAll() {
+  if (!GITHUB_TOKEN) { document.getElementById("config-banner").classList.remove("hidden"); return; }
+
+  const btn = document.getElementById("scan-btn");
+  btn.disabled = true; btn.textContent = "Loading…";
+
+  try {
+    const ghIssues = await ghFetch("/issues?state=open&per_page=50");
+    const real = ghIssues.filter(i => !i.pull_request);
+
+    issuesData = await Promise.all(real.map(async issue => {
+      const comments = await ghFetch(`/issues/${issue.number}/comments`).catch(()=>[]);
+      const s = parseStatus(comments);
+      return { ...issue, file: guessFile(issue), classification: classify(issue), ...s };
+    }));
+
+    // Try backend audit log
+    const alive = await backendAlive();
+    if (alive) {
+      const r = await fetch(`${API_BASE}/audit`);
+      if (r.ok) auditData = await r.json();
+    } else {
+      auditData = buildLocalAudit();
+    }
+
+    renderStats();
+    renderPipeline();
+    renderAuditLog();
+    document.getElementById("last-refresh").textContent = `Refreshed ${new Date().toLocaleTimeString()}`;
+  } catch(err) {
+    showToast("❌ " + err.message, 5000);
+  }
+
+  btn.disabled = false; btn.textContent = "↻ Refresh";
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderStats() {
+  const c = {new:0,scoping:0,awaiting_approval:0,fixing:0,pr_open:0,manual:0};
+  issuesData.forEach(i => { if(c[i.status]!==undefined) c[i.status]++; });
+  document.getElementById("stat-total").textContent    = issuesData.length;
+  document.getElementById("stat-awaiting").textContent = c.awaiting_approval;
+  document.getElementById("stat-fixing").textContent   = c.fixing;
+  document.getElementById("stat-done").textContent     = c.pr_open;
+  document.getElementById("stat-manual").textContent   = c.manual;
+}
+
+function renderPipeline() {
+  const cols = {new:[],scoping:[],awaiting_approval:[],fixing:[],pr_open:[]};
+  issuesData.forEach(i => {
+    const k = cols[i.status]!==undefined ? i.status : "new";
+    cols[k].push(i);
+  });
+  renderCol("col-new",      cols.new,              "new");
+  renderCol("col-scoping",  cols.scoping,           "scoping");
+  renderCol("col-awaiting", cols.awaiting_approval, "awaiting_approval");
+  renderCol("col-fixing",   cols.fixing,            "fixing");
+  renderCol("col-done",     cols.pr_open,           "pr_open");
+  document.getElementById("cnt-new").textContent      = cols.new.length;
+  document.getElementById("cnt-scoping").textContent  = cols.scoping.length;
+  document.getElementById("cnt-awaiting").textContent = cols.awaiting_approval.length;
+  document.getElementById("cnt-fixing").textContent   = cols.fixing.length;
+  document.getElementById("cnt-done").textContent     = cols.pr_open.length;
+}
+
+function renderCol(colId, issues, status) {
+  const el = document.getElementById(colId);
+  el.innerHTML = "";
+  if (!issues.length) { el.innerHTML='<div class="col-empty">— empty —</div>'; return; }
+  issues.forEach((issue, i) => {
+    const card = document.createElement("div");
+    card.className = "issue-card";
+    card.style.animationDelay = `${i*0.06}s`;
+    card.onclick = () => openModal(issue);
+    const risk = issue.classification.risk_flags.length ? "medium" : "low";
+    let extra = "";
+    if (status === "scoping") {
+      extra = `<div style="margin-top:8px;font-family:var(--font-mono);font-size:10px;color:var(--yellow)">⏳ Devin analyzing…</div>`;
+    }
+    if (status === "awaiting_approval") {
+      extra = `<div class="awaiting-badge">Click to review &amp; approve →</div>`;
+    }
+    if (status === "fixing") {
+      extra = `<div class="progress-wrap"><div class="progress-label"><span>Devin working…</span><span>⚙</span></div><div class="progress-bar"><div class="progress-fill" style="width:60%"></div></div></div>`;
+    }
+    if (status === "pr_open") {
+      const prHref = issue.pr_url || `https://github.com/${GITHUB_REPO}/pulls`;
+      extra = `<a class="pr-link" href="${prHref}" target="_blank">↗ View Pull Request</a><button class="rollback-btn" onclick="event.stopPropagation();rollback(${issue.number})">⏪ Rollback</button>`;
+    }
+    card.innerHTML = `
+      <div class="issue-number">#${issue.number} · ${issue.file}</div>
+      <div class="issue-title">${issue.title}</div>
+      <div class="tag-row">
+        <span class="tag tag-bug">bug</span>
+        <span class="tag tag-${risk}">${risk} risk</span>
+        ${issue.classification.safe_for_autofix ? '<span class="tag tag-auto">auto-fix</span>' : '<span class="tag tag-manual">manual</span>'}
+      </div>
+      <div class="issue-time">${timeAgo(issue.created_at)}</div>
+      ${extra}`;
+    el.appendChild(card);
+  });
+}
+
+function renderAuditLog() {
+  const el = document.getElementById("log-body");
+  el.innerHTML = "";
+  const entries = auditData.length ? auditData : buildLocalAudit();
+  if (!entries.length) {
+    el.innerHTML = '<div class="log-entry"><div class="log-text" style="color:var(--muted)">No audit entries yet. Run process_issues.py --scan to begin Stage 1.</div></div>';
+    return;
+  }
+  entries.slice(0,60).forEach((e,i) => {
+    const div = document.createElement("div");
+    div.className = "log-entry";
+    div.style.animationDelay = `${i*0.03}s`;
+    const ts = e.timestamp ? new Date(e.timestamp).toLocaleString() : (e.time||"—");
+    div.innerHTML = `
+      <div class="log-time">${ts}</div>
+      <div class="log-actor">${e.actor||"IssueFlow"}</div>
+      <div class="log-icon">${iconFor(e.action||"")}</div>
+      <div class="log-text">${fmtAudit(e)}</div>`;
+    el.appendChild(div);
+  });
+}
+
+function buildLocalAudit() {
+  const entries = [];
+  issuesData.forEach(issue => {
+    if (issue.status !== "new") {
+      entries.push({ timestamp: issue.updated_at||issue.created_at, actor:"IssueFlow", action:"scope_dispatched", issue:issue.number, detail:`#${issue.number} ${issue.title}` });
+    }
+    if (["awaiting_approval","fixing","pr_open"].includes(issue.status)) {
+      entries.push({ timestamp: issue.updated_at||issue.created_at, actor:"Devin", action:"scope_complete", issue:issue.number, detail:"Scoping report ready" });
+    }
+    if (issue.status === "fixing" || issue.status === "pr_open") {
+      entries.push({ timestamp: issue.updated_at||issue.created_at, actor:"engineer", action:"approved_autofix", issue:issue.number, detail:"" });
+    }
+    if (issue.status === "pr_open") {
+      entries.push({ timestamp: issue.updated_at||issue.created_at, actor:"Devin", action:"pr_opened", issue:issue.number, detail:issue.pr_url||"PR pending" });
+    }
+  });
+  return entries.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+}
+
+function iconFor(a) {
+  return {scope_dispatched:"🔍",scope_complete:"📋",approved_autofix:"✅",approved_review:"👁",marked_manual:"📌",pr_opened:"🌿",rolled_back:"⏪"}[a] || "•";
+}
+
+function fmtAudit(e) {
+  const ref = e.issue ? `<span class="ref">#${e.issue}</span>` : "";
+  switch(e.action) {
+    case "scope_dispatched":  return `Devin scoping session dispatched for ${ref}`;
+    case "scope_complete":    return `<span class="ok">Scoping complete</span> — report ready for ${ref}`;
+    case "approved_autofix":  return `<strong>engineer</strong> approved auto-fix for ${ref}`;
+    case "approved_review":   return `<strong>engineer</strong> approved fix-with-review for ${ref}`;
+    case "marked_manual":     return `${ref} marked for manual handling`;
+    case "pr_opened":         return `<span class="ok">PR opened</span> for ${ref} — ${e.detail||""}`;
+    case "rolled_back":       return `<span class="warn">Rollback</span> — PR closed, ${ref} reopened`;
+    default: return e.detail || e.action || "event";
+  }
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(issue) {
+  currentModal = issue;
+  document.getElementById("modal-num").textContent   = `#${issue.number} · ${issue.file} · ${issue.status.replace(/_/g," ")}`;
+  document.getElementById("modal-title").textContent = issue.title;
+  document.getElementById("modal-body").textContent  = issue.body || "No description provided.";
+
+  const scopeEl = document.getElementById("modal-scope");
+  if (issue.scope_report) {
+    scopeEl.textContent = issue.scope_report;
+    scopeEl.classList.remove("loading");
+  } else if (issue.status === "scoping") {
+    scopeEl.textContent = "Devin is currently analyzing this issue — check back in a few minutes.";
+    scopeEl.classList.add("loading");
+  } else {
+    scopeEl.textContent = "No scoping report yet. Run: python process_issues.py --scan";
+    scopeEl.classList.add("loading");
+  }
+
+  const cls = issue.classification;
+  document.getElementById("modal-class").textContent =
+    `${cls.safe_for_autofix ? "✅ Safe for auto-fix" : "⚠ Manual review recommended"}\n` +
+    `Reason: ${cls.reason}\nComplexity: ${cls.complexity}   File: ${issue.file}`;
+
+  const linkEl = document.getElementById("modal-devin-link");
+  linkEl.innerHTML = issue.scope_session_id && !issue.scope_session_id.startsWith("dry-run")
+    ? `<a class="devin-link" href="https://app.devin.ai/sessions/${issue.scope_session_id}" target="_blank">↗ View Devin scoping session</a>`
+    : "";
+
+  const actEl = document.getElementById("modal-actions");
+  if (issue.status === "awaiting_approval") {
+    actEl.innerHTML = `
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:18px;margin-bottom:10px;letter-spacing:.08em;text-transform:uppercase">Your Decision</div>
+      <div class="decision-row">
+        <button class="btn-autofix" onclick="decide('autofix')">✓ Approve Auto-Fix</button>
+        <button class="btn-review"  onclick="decide('review')">👁 Fix with Review</button>
+        <button class="btn-manual"  onclick="decide('manual')">— Handle Manually</button>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:12px;line-height:1.6">
+        <strong style="color:var(--accent)">Auto-Fix</strong> — Devin fixes, tests, opens PR. Low-risk issues only.<br>
+        <strong style="color:var(--purple)">Fix with Review</strong> — Same but PR explicitly requires human sign-off.<br>
+        <strong style="color:var(--muted)">Handle Manually</strong> — Remove from automation queue.
+      </div>`;
+  } else if (issue.status === "pr_open") {
+    const prHref = issue.pr_url || `https://github.com/${GITHUB_REPO}/pulls`;
+    actEl.innerHTML = `
+      <div style="margin-top:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <a class="devin-link" href="${prHref}" target="_blank" style="font-size:13px">↗ View Pull Request</a>
+        <button class="rollback-btn" style="width:auto;padding:8px 16px;margin:0" onclick="rollback(${issue.number})">⏪ Rollback</button>
+      </div>`;
+  } else {
+    actEl.innerHTML = "";
+  }
+
+  document.getElementById("modal").classList.add("open");
+}
+
+async function decide(mode) {
+  if (!currentModal) return;
+  const issue = currentModal;
+  closeModal();
+
+  const alive = await backendAlive();
+
+  if (mode === "manual") {
+    await ghPost(`/issues/${issue.number}/comments`, {
+      body: `📌 **IssueFlow:** Issue #${issue.number} marked for **manual handling** by an engineer. No automated fix will be dispatched.`
+    });
+    showToast(`📌 Issue #${issue.number} marked manual`);
+    pushAudit("marked_manual", issue.number, "engineer");
+    return;
+  }
+
+  if (alive) {
+    const ok = await apiCall("/approve", { issue_number: issue.number, mode, scope_report: issue.scope_report, actor: "engineer" });
+    if (ok) {
+      showToast(`✅ Issue #${issue.number} approved (${mode}) — Devin dispatched`);
+      pushAudit(`approved_${mode}`, issue.number, "engineer");
+    } else {
+      showToast("❌ Backend error. Is process_issues.py --serve running?", 4500);
+    }
+  } else {
+    // Post approval comment to GitHub — engineer can then run CLI to dispatch
+    const label = mode === "autofix" ? "Auto-Fix" : "Fix with Review";
+    await ghPost(`/issues/${issue.number}/comments`, {
+      body: `✅ **IssueFlow Stage 2 — Fix Approved** (\`${mode}\` mode)\n\nAn engineer has reviewed the scoping report and approved **${label}** for this issue.\n\n**Next step:** Run \`python process_issues.py --approve ${issue.number} --mode ${mode}\` to dispatch Devin.\n\n${mode==="review" ? "⚠ This PR will require human review before merging." : "✅ Devin will open a PR once all tests pass."}`
+    });
+    showToast(`✅ Approval posted to GitHub #${issue.number}`);
+    pushAudit(`approved_${mode}`, issue.number, "engineer");
+  }
+  setTimeout(loadAll, 1800);
+}
+
+async function rollback(num) {
+  if (!confirm(`Roll back issue #${num}? This will close the PR and reopen the issue.`)) return;
+  const alive = await backendAlive();
+  if (alive) {
+    const ok = await apiCall("/rollback", { issue_number: num, actor: "engineer" });
+    showToast(ok ? `⏪ Rolled back #${num}` : "❌ Rollback failed — check terminal", ok ? 3000 : 4500);
+  } else {
+    await ghPost(`/issues/${num}/comments`, {
+      body: `⏪ **IssueFlow Rollback Requested**\n\nAn engineer has requested a rollback.\n\nRun: \`python process_issues.py --rollback ${num}\``
+    });
+    showToast(`⏪ Rollback comment posted to #${num}`);
+  }
+  pushAudit("rolled_back", num, "engineer");
+  setTimeout(loadAll, 1800);
+}
+
+function pushAudit(action, issue, actor) {
+  auditData.unshift({ timestamp: new Date().toISOString(), actor, action, issue, detail:"" });
+  renderAuditLog();
+}
+
+function closeModal() { document.getElementById("modal").classList.remove("open"); }
+function maybeCloseModal(e) { if (e.target===document.getElementById("modal")) closeModal(); }
+
+// ============================================================
+// UTILS
+// ============================================================
+function timeAgo(iso) {
+  if (!iso) return "—";
+  const s = (Date.now()-new Date(iso))/1000;
+  if (s<60)    return "just now";
+  if (s<3600)  return `${Math.floor(s/60)}m ago`;
+  if (s<86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
+}
+
+function showToast(msg, ms=3000) {
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.remove("hidden");
+  setTimeout(()=>t.classList.add("hidden"),ms);
+}
+
+// ============================================================
+// AUTO REFRESH + INIT
+// ============================================================
+setInterval(loadAll, 30000);
+if (GITHUB_TOKEN) loadAll();
+</script>
+</body>
+</html>
