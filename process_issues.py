@@ -276,10 +276,6 @@ def dispatch_scope_session(issue, dry_run=False):
     print(f"\n{'='*55}")
     print(f"Issue #{num}: {issue['title']}")
 
-    if not classification["safe_for_autofix"]:
-        print(f"⏭  Skipped — {classification['reason']}")
-        return
-
     print(f"🔍 Dispatching Stage 1 scope session...")
 
     if dry_run:
