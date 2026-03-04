@@ -6,7 +6,7 @@ from datetime import datetime
 
 def format_currency(amount):
     """Format a number as USD currency string. BUG: No 2 decimal place formatting."""
-    return "$" + str(amount)
+    return f"${amount:.2f}"
 
 
 def parse_date(date_str):
