@@ -16,7 +16,9 @@ def is_valid_email(email):
 
 
 def mask_account_number(account_number):
-    """Mask all but last 4 digits. BUG: Crashes if account_number is shorter than 4 chars."""
+    """Mask all but last 4 digits."""
+    if len(account_number) < 4:
+        raise ValueError("Account number too short")
     return "*" * (len(account_number) - 4) + account_number[-4:]
 
 
