@@ -498,6 +498,7 @@ def run_server():
             for issue in issues:
                 if str(issue["number"]) not in state["issues"]:
                     dispatch_scope_session(issue)
+                    time.sleep(3) # Avoid 429 Too Many Requests	
             # Return session IDs so dashboard can show links immediately
             state = load_state()
             sessions = {

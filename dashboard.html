@@ -7,21 +7,19 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
   :root {
-    --bg:#0a0e17;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;
-    --accent:#00d4ff;--accent2:#0088ff;--green:#00e5a0;--yellow:#ffc040;
-    --red:#ff4d6a;--purple:#a78bfa;--text:#e2e8f0;--muted:#64748b;
+    --bg:#141414;--surface:#1f1f1f;--surface2:#242424;--border:#2e2e2e;
+    --accent:#00ec7e;--accent2:#00c96a;--green:#00ec7e;--yellow:#f59e0b;
+    --red:#e05252;--purple:#a78bfa;--text:#ffffff;--muted:#a0a0a0;
     --font-mono:'IBM Plex Mono',monospace;--font-sans:'IBM Plex Sans',sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;overflow-x:hidden;}
-  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  body::before{display:none;}
   .wrapper{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 28px;}
-
-  /* HEADER */
   header{border-bottom:1px solid var(--border);padding:18px 0;margin-bottom:28px;}
   .header-inner{display:flex;align-items:center;justify-content:space-between;}
   .logo{display:flex;align-items:center;gap:12px;}
-  .logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+  .logo-icon{width:34px;height:34px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
   .logo-text{font-family:var(--font-mono);font-size:17px;font-weight:600;}
   .logo-text span{color:var(--accent);}
   .header-right{display:flex;align-items:center;gap:14px;}
@@ -29,79 +27,67 @@
   .live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;}
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
   .repo-label{font-family:var(--font-mono);font-size:11px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:5px 12px;border-radius:6px;}
-  .scan-btn{background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;color:#000;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:8px 18px;border-radius:7px;cursor:pointer;letter-spacing:.05em;transition:opacity .15s;}
+  .scan-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:8px 18px;border-radius:7px;cursor:pointer;letter-spacing:.05em;transition:opacity .15s;}
   .scan-btn:hover{opacity:.82;}
   .scan-btn:disabled{opacity:.4;cursor:not-allowed;}
-
-  /* CONFIG BANNER */
   .config-banner{background:rgba(255,192,64,.08);border:1px solid rgba(255,192,64,.25);border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:12px;margin-bottom:24px;font-size:12px;}
   .config-banner.hidden{display:none;}
   .config-banner input{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:7px 12px;border-radius:6px;outline:none;}
   .config-banner input:focus{border-color:var(--accent);}
-  .config-save{background:var(--yellow);border:none;color:#000;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:8px 16px;border-radius:6px;cursor:pointer;white-space:nowrap;}
-
-  /* STATS */
+  .config-save{background:var(--green);border:none;color:#000;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:8px 16px;border-radius:6px;cursor:pointer;white-space:nowrap;}
   .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:30px;}
   .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;animation:fadeUp .4s ease both;}
   .stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-  .stat-card.blue::after{background:linear-gradient(90deg,var(--accent2),var(--accent));}
+  .stat-card.blue::after{background:var(--green);}
   .stat-card.yellow::after{background:var(--yellow);}
   .stat-card.purple::after{background:var(--purple);}
   .stat-card.green::after{background:var(--green);}
   .stat-card.red::after{background:var(--red);}
   .stat-label{font-size:10px;font-family:var(--font-mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
   .stat-value{font-size:30px;font-weight:600;font-family:var(--font-mono);line-height:1;margin-bottom:4px;}
-  .stat-card.blue .stat-value{color:var(--accent);}
+  .stat-card.blue .stat-value{color:var(--green);}
   .stat-card.yellow .stat-value{color:var(--yellow);}
   .stat-card.purple .stat-value{color:var(--purple);}
   .stat-card.green .stat-value{color:var(--green);}
   .stat-card.red .stat-value{color:var(--red);}
   .stat-sub{font-size:11px;color:var(--muted);}
-
-  /* SECTION HEADER */
   .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
   .section-title{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
-
-  /* PIPELINE */
   .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:40px;}
   .pipeline-col{animation:fadeUp .5s ease both;}
   .col-header{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;background:var(--surface2);}
   .col-label{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;}
   .col-dot{width:7px;height:7px;border-radius:50%;}
-  .col-new      .col-dot{background:var(--muted);}
-  .col-scoping  .col-dot{background:var(--yellow);animation:pulse 2s infinite;}
-  .col-awaiting .col-dot{background:var(--accent2);}
-  .col-fixing   .col-dot{background:var(--purple);animation:pulse 2s infinite;}
-  .col-done     .col-dot{background:var(--green);}
+  .col-new .col-dot{background:var(--muted);}
+  .col-scoping .col-dot{background:var(--yellow);animation:pulse 2s infinite;}
+  .col-awaiting .col-dot{background:#60a5fa;}
+  .col-fixing .col-dot{background:var(--purple);animation:pulse 2s infinite;}
+  .col-done .col-dot{background:var(--accent);}
   .col-count{font-family:var(--font-mono);font-size:10px;background:var(--border);padding:2px 7px;border-radius:8px;color:var(--muted);}
-  .col-body{border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;background:rgba(17,24,39,.5);min-height:240px;padding:10px;display:flex;flex-direction:column;gap:8px;}
+  .col-body{border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;background:rgba(255,255,255,.02);min-height:240px;padding:10px;display:flex;flex-direction:column;gap:8px;}
   .col-empty{text-align:center;padding:32px 0;color:var(--muted);font-family:var(--font-mono);font-size:10px;}
-
-  /* ISSUE CARD */
   .issue-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:all .18s;animation:fadeUp .35s ease both;}
-  .issue-card:hover{border-color:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,136,255,.1);}
+  .issue-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,236,126,.15);}
   .issue-number{font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:5px;}
   .issue-title{font-size:12px;font-weight:500;line-height:1.4;margin-bottom:8px;color:var(--text);}
   .tag-row{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px;}
   .tag{font-family:var(--font-mono);font-size:9px;padding:2px 7px;border-radius:4px;font-weight:500;}
-  .tag-bug{background:rgba(255,77,106,.12);color:var(--red);border:1px solid rgba(255,77,106,.25);}
-  .tag-low{background:rgba(0,229,160,.08);color:var(--green);border:1px solid rgba(0,229,160,.2);}
-  .tag-medium{background:rgba(255,192,64,.08);color:var(--yellow);border:1px solid rgba(255,192,64,.2);}
-  .tag-auto{background:rgba(0,136,255,.08);color:var(--accent);border:1px solid rgba(0,136,255,.2);}
-  .tag-manual{background:rgba(100,116,139,.1);color:var(--muted);border:1px solid rgba(100,116,139,.2);}
+  .tag-bug{background:rgba(224,82,82,.15);color:#e05252;border:1px solid rgba(224,82,82,.3);}
+  .tag-low{background:rgba(0,236,126,.12);color:#00ec7e;border:1px solid rgba(0,236,126,.3);}
+  .tag-medium{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.3);}
+  .tag-auto{background:rgba(0,236,126,.12);color:#00ec7e;border:1px solid rgba(0,236,126,.3);}
+  .tag-manual{background:rgba(160,160,160,.1);color:var(--muted);border:1px solid rgba(160,160,160,.2);}
   .issue-time{font-family:var(--font-mono);font-size:10px;color:var(--muted);}
   .progress-wrap{margin-top:8px;}
   .progress-label{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-bottom:4px;}
   .progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
-  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--purple));border-radius:2px;animation:shimmer 2s ease-in-out infinite alternate;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--green));border-radius:2px;animation:shimmer 2s ease-in-out infinite alternate;}
   @keyframes shimmer{from{opacity:.7}to{opacity:1}}
   .pr-link{display:inline-flex;align-items:center;gap:5px;margin-top:7px;font-family:var(--font-mono);font-size:10px;color:var(--green);text-decoration:none;}
   .pr-link:hover{text-decoration:underline;}
   .rollback-btn{width:100%;margin-top:6px;background:transparent;border:1px solid rgba(255,77,106,.3);color:var(--red);font-family:var(--font-mono);font-size:10px;padding:6px;border-radius:5px;cursor:pointer;transition:all .15s;}
   .rollback-btn:hover{background:rgba(255,77,106,.1);border-color:var(--red);}
-  .awaiting-badge{display:block;margin-top:8px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--accent2);background:rgba(0,136,255,.08);border:1px solid rgba(0,136,255,.2);border-radius:5px;padding:5px;}
-
-  /* COMMANDS PANEL */
+  .awaiting-badge{display:block;margin-top:8px;text-align:center;font-family:var(--font-mono);font-size:10px;color:#60a5fa;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:5px;padding:5px;}
   .commands-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:40px;}
   .cmd-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;animation:fadeUp .4s ease both;}
   .cmd-label{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;}
@@ -110,41 +96,36 @@
   .cmd-btn{width:100%;border:none;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:9px;border-radius:7px;cursor:pointer;letter-spacing:.04em;transition:opacity .15s;}
   .cmd-btn:hover{opacity:.82;}
   .cmd-btn:disabled{opacity:.4;cursor:not-allowed;}
-  .btn-blue{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#000;}
-  .btn-green{background:linear-gradient(135deg,#00a550,var(--green));color:#000;}
+  .btn-blue{background:var(--accent);color:#000;}
+  .btn-green{background:var(--accent);color:#000;}
   .btn-red{background:transparent;border:1px solid rgba(255,77,106,.4)!important;color:var(--red);}
   .btn-red:hover{background:rgba(255,77,106,.1)!important;}
   .btn-muted{background:var(--surface2);border:1px solid var(--border)!important;color:var(--muted);}
-  .btn-muted:hover{border-color:var(--text)!important;color:var(--text);}
+  .btn-muted:hover{border-color:var(--accent)!important;color:var(--accent);}
   .cmd-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:7px 10px;border-radius:6px;outline:none;width:90px;}
   .cmd-input:focus{border-color:var(--accent);}
   .cmd-input option{background:var(--surface2);}
-
-  /* AUDIT LOG */
   .audit-section{margin-bottom:48px;}
   .log-container{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
   .log-header{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2);}
   .log-title{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
   .log-body{max-height:280px;overflow-y:auto;}
-  .log-entry{display:flex;align-items:flex-start;gap:12px;padding:9px 18px;border-bottom:1px solid rgba(30,45,69,.5);transition:background .12s;}
-  .log-entry:hover{background:rgba(255,255,255,.015);}
+  .log-entry{display:flex;align-items:flex-start;gap:12px;padding:9px 18px;border-bottom:1px solid rgba(255,255,255,.05);transition:background .12s;}
+  .log-entry:hover{background:rgba(255,255,255,.03);}
   .log-entry:last-child{border-bottom:none;}
   .log-time{font-family:var(--font-mono);font-size:10px;color:var(--muted);white-space:nowrap;padding-top:2px;min-width:150px;}
-  .log-actor{font-family:var(--font-mono);font-size:10px;color:var(--accent2);min-width:80px;padding-top:2px;}
+  .log-actor{font-family:var(--font-mono);font-size:10px;color:var(--green);min-width:80px;padding-top:2px;}
   .log-icon{font-size:13px;padding-top:1px;}
   .log-text{font-size:12px;line-height:1.5;color:var(--text);flex:1;}
   .log-text strong{color:var(--accent);font-weight:500;}
   .log-text .ok{color:var(--green);}
   .log-text .warn{color:var(--yellow);}
   .log-text .ref{color:var(--purple);font-family:var(--font-mono);font-size:11px;}
-
   @keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
   ::-webkit-scrollbar{width:4px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-
-  /* MODAL */
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);z-index:100;align-items:center;justify-content:center;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(5px);z-index:100;align-items:center;justify-content:center;}
   .modal-overlay.open{display:flex;}
   .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:640px;max-width:94vw;max-height:88vh;overflow-y:auto;padding:30px;animation:fadeUp .2s ease;}
   .modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
@@ -156,147 +137,94 @@
   .modal-value{font-size:12px;line-height:1.7;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;white-space:pre-wrap;font-family:var(--font-mono);}
   .modal-value.loading{color:var(--muted);font-style:italic;}
   .decision-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:20px;}
-  .btn-autofix{background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;color:#000;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:12px 8px;border-radius:8px;cursor:pointer;letter-spacing:.04em;transition:opacity .15s;}
+  .btn-autofix{background:var(--accent);border:none;color:#000;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:12px 8px;border-radius:8px;cursor:pointer;letter-spacing:.04em;transition:opacity .15s;}
   .btn-autofix:hover{opacity:.83;}
   .btn-review{background:transparent;border:1px solid var(--purple);color:var(--purple);font-family:var(--font-mono);font-size:11px;font-weight:600;padding:12px 8px;border-radius:8px;cursor:pointer;transition:all .15s;}
   .btn-review:hover{background:rgba(167,139,250,.1);}
   .btn-manual{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:12px 8px;border-radius:8px;cursor:pointer;transition:all .15s;}
   .btn-manual:hover{border-color:var(--muted);color:var(--text);}
-  .devin-link{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--accent2);text-decoration:none;margin-top:10px;}
+  .devin-link{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--green);text-decoration:none;margin-top:10px;}
   .devin-link:hover{text-decoration:underline;}
-
-  /* TOAST */
-  .toast{position:fixed;bottom:28px;right:28px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-size:13px;display:flex;align-items:center;gap:10px;animation:fadeUp .25s ease;box-shadow:0 8px 30px rgba(0,0,0,.4);}
+  .toast{position:fixed;bottom:28px;right:28px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-size:13px;display:flex;align-items:center;gap:10px;animation:fadeUp .25s ease;box-shadow:0 4px 24px rgba(0,0,0,.6);}
   .toast.hidden{display:none;}
-
   @media(max-width:1100px){.pipeline,.stats-row,.commands-grid{grid-template-columns:repeat(3,1fr);}}
   @media(max-width:700px){.pipeline,.stats-row,.commands-grid{grid-template-columns:repeat(2,1fr);}}
 </style>
 </head>
 <body>
 <div class="wrapper">
-
-  <!-- CONFIG BANNER -->
   <div class="config-banner" id="config-banner">
     <span style="color:var(--yellow)">⚠</span>
     <span style="color:var(--yellow);font-family:var(--font-mono);white-space:nowrap">GitHub Token:</span>
     <input type="password" id="token-input" placeholder="Paste your GitHub token (ghp_...)"/>
     <button class="config-save" onclick="saveToken()">Save &amp; Load</button>
   </div>
-
-  <!-- HEADER -->
   <header>
     <div class="header-inner">
       <div class="logo">
-        <div class="logo-icon">⚡</div>
         <div class="logo-text">Issue<span>Flow</span></div>
       </div>
       <div class="header-right">
         <div class="live-badge"><div class="live-dot"></div>LIVE</div>
         <div class="repo-label">andy560/finserv-issueflow-demo</div>
         <button class="scan-btn" id="scan-btn" onclick="loadAll()">↻ Refresh</button>
-        <button class="scan-btn" id="dispatch-btn" onclick="runScan()" style="background:linear-gradient(135deg,#00a550,var(--green))">⚡ Scan &amp; Scope Issues</button>
+        <button class="scan-btn" id="dispatch-btn" onclick="runScan()" style="background:var(--accent);color:#000;border:none"> Scan &amp; Scope Issues</button>
       </div>
     </div>
   </header>
-
-  <!-- STATS -->
   <div class="stats-row">
-    <div class="stat-card blue">
-      <div class="stat-label">Total Open</div>
-      <div class="stat-value" id="stat-total">—</div>
-      <div class="stat-sub">GitHub issues</div>
-    </div>
-    <div class="stat-card yellow">
-      <div class="stat-label">Awaiting Approval</div>
-      <div class="stat-value" id="stat-awaiting">—</div>
-      <div class="stat-sub">scoped, need decision</div>
-    </div>
-    <div class="stat-card purple">
-      <div class="stat-label">In Progress</div>
-      <div class="stat-value" id="stat-fixing">—</div>
-      <div class="stat-sub">Devin sessions active</div>
-    </div>
-    <div class="stat-card green">
-      <div class="stat-label">PR Opened</div>
-      <div class="stat-value" id="stat-done">—</div>
-      <div class="stat-sub">ready for review</div>
-    </div>
-    <div class="stat-card red">
-      <div class="stat-label">Manual</div>
-      <div class="stat-value" id="stat-manual">—</div>
-      <div class="stat-sub">flagged for engineer</div>
-    </div>
+    <div class="stat-card blue"><div class="stat-label">Total Open</div><div class="stat-value" id="stat-total">—</div><div class="stat-sub">GitHub issues</div></div>
+    <div class="stat-card yellow"><div class="stat-label">Awaiting Approval</div><div class="stat-value" id="stat-awaiting">—</div><div class="stat-sub">scoped, need decision</div></div>
+    <div class="stat-card purple"><div class="stat-label">In Progress</div><div class="stat-value" id="stat-fixing">—</div><div class="stat-sub">Devin sessions active</div></div>
+    <div class="stat-card green"><div class="stat-label">PR Opened</div><div class="stat-value" id="stat-done">—</div><div class="stat-sub">ready for review</div></div>
+    <div class="stat-card red"><div class="stat-label">Manual</div><div class="stat-value" id="stat-manual">—</div><div class="stat-sub">flagged for engineer</div></div>
   </div>
-
-  <!-- PIPELINE -->
   <div class="section-header">
     <div class="section-title">// Resolution Pipeline</div>
     <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted)" id="last-refresh">Not loaded yet</div>
   </div>
-
   <div class="pipeline">
     <div class="pipeline-col col-new">
-      <div class="col-header">
-        <div class="col-label"><div class="col-dot"></div>New</div>
-        <div class="col-count" id="cnt-new">0</div>
-      </div>
+      <div class="col-header"><div class="col-label"><div class="col-dot"></div>New</div><div class="col-count" id="cnt-new">0</div></div>
       <div class="col-body" id="col-new"></div>
     </div>
     <div class="pipeline-col col-scoping">
-      <div class="col-header">
-        <div class="col-label"><div class="col-dot"></div>Scoping</div>
-        <div class="col-count" id="cnt-scoping">0</div>
-      </div>
+      <div class="col-header"><div class="col-label"><div class="col-dot"></div>Scoping</div><div class="col-count" id="cnt-scoping">0</div></div>
       <div class="col-body" id="col-scoping"></div>
     </div>
     <div class="pipeline-col col-awaiting">
-      <div class="col-header">
-        <div class="col-label"><div class="col-dot"></div>Awaiting Approval</div>
-        <div class="col-count" id="cnt-awaiting">0</div>
-      </div>
+      <div class="col-header"><div class="col-label"><div class="col-dot"></div>Awaiting Approval</div><div class="col-count" id="cnt-awaiting">0</div></div>
       <div class="col-body" id="col-awaiting"></div>
     </div>
     <div class="pipeline-col col-fixing">
-      <div class="col-header">
-        <div class="col-label"><div class="col-dot"></div>Devin Fixing</div>
-        <div class="col-count" id="cnt-fixing">0</div>
-      </div>
+      <div class="col-header"><div class="col-label"><div class="col-dot"></div>Devin Fixing</div><div class="col-count" id="cnt-fixing">0</div></div>
       <div class="col-body" id="col-fixing"></div>
     </div>
     <div class="pipeline-col col-done">
-      <div class="col-header">
-        <div class="col-label"><div class="col-dot"></div>PR Open</div>
-        <div class="col-count" id="cnt-done">0</div>
-      </div>
+      <div class="col-header"><div class="col-label"><div class="col-dot"></div>PR Open</div><div class="col-count" id="cnt-done">0</div></div>
       <div class="col-body" id="col-done"></div>
     </div>
   </div>
-
-  <!-- CLI COMMANDS -->
   <div class="section-header" style="margin-top:8px">
     <div class="section-title">// Commands</div>
     <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">All actions available via button or CLI</div>
   </div>
-  <div class="commands-grid" id="commands-grid">
-
+  <div class="commands-grid">
     <div class="cmd-card">
       <div class="cmd-label">Scan &amp; Scope All Issues</div>
       <div class="cmd-desc">Stage 1 — Devin analyzes every new issue and produces a scoping report. No code written.</div>
       <div class="cmd-code">python process_issues.py --scan</div>
-      <button class="cmd-btn btn-blue" onclick="runScan()">⚡ Run Scan</button>
+      <button class="cmd-btn btn-blue" onclick="runScan()"> Run Scan</button>
     </div>
-
     <div class="cmd-card">
       <div class="cmd-label">Scope Single Issue</div>
       <div class="cmd-desc">Run Stage 1 on one specific issue by number.</div>
       <div class="cmd-code">python process_issues.py --issue &lt;number&gt;</div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <input class="cmd-input" id="input-scope-issue" type="number" placeholder="Issue #" min="1"/>
-        <button class="cmd-btn btn-blue" style="flex:1" onclick="scopeSingle()">🔍 Scope</button>
+        <button class="cmd-btn btn-blue" style="flex:1" onclick="scopeSingle()"> Scope</button>
       </div>
     </div>
-
     <div class="cmd-card">
       <div class="cmd-label">Approve Issue</div>
       <div class="cmd-desc">Stage 2 — dispatch a fix session to Devin after reviewing its scoping report.</div>
@@ -307,37 +235,31 @@
           <option value="autofix">autofix</option>
           <option value="review">review</option>
         </select>
-        <button class="cmd-btn btn-green" onclick="approveFromCmd()">✓ Approve</button>
+        <button class="cmd-btn btn-green" onclick="approveFromCmd()"> Approve</button>
       </div>
     </div>
-
     <div class="cmd-card">
       <div class="cmd-label">Rollback Issue</div>
       <div class="cmd-desc">Close the open PR and reopen the issue for re-triage or manual handling.</div>
       <div class="cmd-code">python process_issues.py --rollback &lt;number&gt;</div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <input class="cmd-input" id="input-rollback-issue" type="number" placeholder="Issue #" min="1"/>
-        <button class="cmd-btn btn-red" style="flex:1" onclick="rollbackFromCmd()">⏪ Rollback</button>
+        <button class="cmd-btn btn-red" style="flex:1" onclick="rollbackFromCmd()"> Rollback</button>
       </div>
     </div>
-
     <div class="cmd-card">
       <div class="cmd-label">Dry Run (Preview)</div>
       <div class="cmd-desc">Preview what IssueFlow would do without dispatching any Devin sessions.</div>
       <div class="cmd-code">python process_issues.py --scan --dry-run</div>
-      <button class="cmd-btn btn-muted" onclick="runDryRun()">👁 Dry Run</button>
+      <button class="cmd-btn btn-muted" onclick="runDryRun()"> Dry Run</button>
     </div>
-
     <div class="cmd-card">
       <div class="cmd-label">Start API Server</div>
       <div class="cmd-desc">Run the Flask backend so this dashboard can trigger commands directly.</div>
       <div class="cmd-code">python process_issues.py --serve</div>
-      <button class="cmd-btn btn-muted" id="backend-status-btn" onclick="checkBackend()">⚙ Check Status</button>
+      <button class="cmd-btn btn-muted" id="backend-status-btn" onclick="checkBackend()"> Check Status</button>
     </div>
-
   </div>
-
-  <!-- AUDIT LOG -->
   <div class="audit-section">
     <div class="section-header">
       <div class="section-title">// Audit Log</div>
@@ -349,15 +271,12 @@
         <div class="live-badge"><div class="live-dot"></div>AUTO-REFRESH 60s</div>
       </div>
       <div class="log-body" id="log-body">
-        <div class="log-entry">
-          <div class="log-text" style="color:var(--muted)">Paste your GitHub token above and click Save &amp; Load to begin…</div>
-        </div>
+        <div class="log-entry"><div class="log-text" style="color:var(--muted)">Paste your GitHub token above and click Save &amp; Load to begin…</div></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL -->
 <div class="modal-overlay" id="modal" onclick="maybeCloseModal(event)">
   <div class="modal">
     <div class="modal-header">
@@ -387,16 +306,17 @@
 <div class="toast hidden" id="toast"></div>
 
 <script>
-// ============================================================
-// CONFIG
-// ============================================================
 const GITHUB_REPO = "andy560/finserv-issueflow-demo";
 const API_BASE    = "http://localhost:5000/api";
 
-let GITHUB_TOKEN = localStorage.getItem("gh_token") || "";
-let issuesData   = [];
-let auditData    = [];
-let currentModal = null;
+// Status rank — issues can only move forward, never backward
+const STATUS_RANK = { new:0, scoping:1, awaiting_approval:2, fixing:3, pr_open:4, manual:5, rolled_back:5 };
+
+let GITHUB_TOKEN      = localStorage.getItem("gh_token") || "";
+let issuesData        = [];
+let auditData         = [];
+let currentModal      = null;
+let approvalCooldownUntil = 0;
 
 if (GITHUB_TOKEN) document.getElementById("config-banner").classList.add("hidden");
 
@@ -408,19 +328,14 @@ function saveToken() {
   loadAll();
 }
 
-// ============================================================
-// GITHUB API
-// ============================================================
 function ghH() {
   return { "Authorization": `Bearer ${GITHUB_TOKEN}`, "Accept": "application/vnd.github+json" };
 }
-
 async function ghFetch(path) {
   const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}${path}`, { headers: ghH() });
   if (!r.ok) throw new Error(`GitHub ${r.status}`);
   return r.json();
 }
-
 async function ghPost(path, body) {
   const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}${path}`, {
     method: "POST", headers: { ...ghH(), "Content-Type": "application/json" },
@@ -429,16 +344,12 @@ async function ghPost(path, body) {
   return r.ok;
 }
 
-// ============================================================
-// BACKEND (process_issues.py --serve)
-// ============================================================
 async function backendAlive() {
   try {
     const r = await fetch(`${API_BASE}/audit`, { signal: AbortSignal.timeout(1500) });
     return r.ok;
   } catch { return false; }
 }
-
 async function apiCall(path, body) {
   try {
     const r = await fetch(`${API_BASE}${path}`, {
@@ -449,9 +360,6 @@ async function apiCall(path, body) {
   } catch { return null; }
 }
 
-// ============================================================
-// CLASSIFICATION
-// ============================================================
 const RISKY = ["database","migration","schema","production","security",
                "auth token","payment","deploy","infrastructure","refactor",
                "breaking change","architecture","credentials","encryption"];
@@ -476,9 +384,6 @@ function guessFile(issue) {
   return "unknown";
 }
 
-// ============================================================
-// DERIVE STATUS FROM GITHUB COMMENTS
-// ============================================================
 function parseStatus(comments) {
   const relevant = comments.filter(c => c.body && (
     c.body.includes("IssueFlow") || c.body.includes("Root Cause") || c.body.includes("Proposed Fix")
@@ -517,9 +422,6 @@ function parseStatus(comments) {
   return { status, scope_report, scope_session_id, fix_session_id, pr_url };
 }
 
-// ============================================================
-// SCAN & LOAD
-// ============================================================
 async function runScan() {
   if (!GITHUB_TOKEN) { document.getElementById("config-banner").classList.remove("hidden"); return; }
   const btn = document.getElementById("dispatch-btn");
@@ -527,19 +429,17 @@ async function runScan() {
 
   const alive = await backendAlive();
   if (!alive) {
-    showToast("❌ Backend not running. Start with: python process_issues.py --serve", 5000);
-    btn.disabled = false; btn.textContent = "⚡ Scan & Scope Issues";
+    showToast("Backend not running — start with: python process_issues.py --serve", 5000);
+    btn.disabled = false; btn.textContent = "Scan & Scope Issues";
     return;
   }
 
-  // Optimistically move all "new" issues to "scoping" immediately
   issuesData.forEach(i => { if (i.status === "new") i.status = "scoping"; });
   renderStats();
   renderPipeline();
 
   const ok = await apiCall("/scan", {});
   if (ok) {
-    // Populate session IDs immediately from API response so links appear on cards
     if (ok.sessions) {
       issuesData.forEach(i => {
         const sid = ok.sessions[String(i.number)];
@@ -547,21 +447,20 @@ async function runScan() {
       });
       renderPipeline();
     }
-    showToast("🔍 Stage 1 dispatched — Devin is scoping all new issues", 4000);
+    showToast("Stage 1 dispatched — Devin is scoping all new issues", 4000);
     pushAudit("scope_dispatched", "all", "IssueFlow");
-    setTimeout(loadAll, 2000);
   } else {
-    // Revert optimistic update if scan failed
     issuesData.forEach(i => { if (i.status === "scoping" && !i.scope_session_id) i.status = "new"; });
     renderStats();
     renderPipeline();
-    showToast("❌ Scan failed — check terminal", 4000);
+    showToast("Scan failed — check terminal", 4000);
   }
 
-  btn.disabled = false; btn.textContent = "⚡ Scan & Scope Issues";
+  btn.disabled = false; btn.textContent = "Scan & Scope Issues";
 }
 
 async function loadAll() {
+  if (Date.now() < approvalCooldownUntil) return;
   if (!GITHUB_TOKEN) { document.getElementById("config-banner").classList.remove("hidden"); return; }
 
   const btn = document.getElementById("scan-btn");
@@ -574,10 +473,23 @@ async function loadAll() {
     issuesData = await Promise.all(real.map(async issue => {
       const comments = await ghFetch(`/issues/${issue.number}/comments`).catch(()=>[]);
       const s = parseStatus(comments);
-      return { ...issue, file: guessFile(issue), classification: classify(issue), ...s };
+
+      // Issues can only move forward — never let a reload push an issue backwards
+      const existing    = issuesData.find(i => i.number === issue.number);
+      const existingRank = existing ? (STATUS_RANK[existing.status] ?? 0) : 0;
+      const newRank      = STATUS_RANK[s.status] ?? 0;
+      const merged = newRank >= existingRank
+        ? s
+        : {
+            ...s,
+            status:           existing.status,
+            fix_session_id:   existing.fix_session_id  || s.fix_session_id,
+            scope_session_id: existing.scope_session_id || s.scope_session_id,
+          };
+
+      return { ...issue, file: guessFile(issue), classification: classify(issue), ...merged };
     }));
 
-    // Try backend audit log
     const alive = await backendAlive();
     if (alive) {
       const r = await fetch(`${API_BASE}/audit`);
@@ -591,15 +503,12 @@ async function loadAll() {
     renderAuditLog();
     document.getElementById("last-refresh").textContent = `Refreshed ${new Date().toLocaleTimeString()}`;
   } catch(err) {
-    showToast("❌ " + err.message, 5000);
+    showToast("Error: " + err.message, 5000);
   }
 
   btn.disabled = false; btn.textContent = "↻ Refresh";
 }
 
-// ============================================================
-// RENDER
-// ============================================================
 function renderStats() {
   const c = {new:0,scoping:0,awaiting_approval:0,fixing:0,pr_open:0,manual:0};
   issuesData.forEach(i => { if(c[i.status]!==undefined) c[i.status]++; });
@@ -641,8 +550,8 @@ function renderCol(colId, issues, status) {
     let extra = "";
     if (status === "scoping") {
       const scopeLink = issue.scope_session_id && !issue.scope_session_id.startsWith("dry-run")
-        ? `<a class="pr-link" style="color:var(--yellow)" href="https://app.devin.ai/sessions/${issue.scope_session_id}" target="_blank" onclick="event.stopPropagation()">↗ View Devin session</a>`
-        : `<div style="margin-top:6px;font-family:var(--font-mono);font-size:10px;color:var(--yellow)">⏳ Devin analyzing…</div>`;
+        ? `<a class="pr-link" style="color:var(--yellow)" href="https://app.devin.ai/sessions/${issue.scope_session_id}" target="_blank" onclick="event.stopPropagation()">View Devin session →</a>`
+        : `<div style="margin-top:6px;font-family:var(--font-mono);font-size:10px;color:var(--yellow)">Devin analyzing…</div>`;
       extra = scopeLink;
     }
     if (status === "awaiting_approval") {
@@ -650,13 +559,13 @@ function renderCol(colId, issues, status) {
     }
     if (status === "fixing") {
       const fixLink = issue.fix_session_id
-        ? `<a class="pr-link" style="color:var(--purple)" href="https://app.devin.ai/sessions/${issue.fix_session_id}" target="_blank" onclick="event.stopPropagation()">↗ View Devin fix session</a>`
-        : `<div style="margin-top:6px;font-family:var(--font-mono);font-size:10px;color:var(--purple)">⏳ Session starting…</div>`;
-      extra = `<div class="progress-wrap"><div class="progress-label"><span>Devin working…</span><span>⚙</span></div><div class="progress-bar"><div class="progress-fill" style="width:60%"></div></div></div>${fixLink}`;
+        ? `<a class="pr-link" style="color:var(--purple)" href="https://app.devin.ai/sessions/${issue.fix_session_id}" target="_blank" onclick="event.stopPropagation()">View Devin fix session →</a>`
+        : `<div style="margin-top:6px;font-family:var(--font-mono);font-size:10px;color:var(--purple)">Session starting…</div>`;
+      extra = `<div class="progress-wrap"><div class="progress-label"><span>Devin working…</span><span></span></div><div class="progress-bar"><div class="progress-fill" style="width:60%"></div></div></div>${fixLink}`;
     }
     if (status === "pr_open") {
       const prHref = issue.pr_url || `https://github.com/${GITHUB_REPO}/pulls`;
-      extra = `<a class="pr-link" href="${prHref}" target="_blank" onclick="event.stopPropagation()">↗ View Pull Request</a><button class="rollback-btn" onclick="event.stopPropagation();rollback(${issue.number})">⏪ Rollback</button>`;
+      extra = `<a class="pr-link" href="${prHref}" target="_blank" onclick="event.stopPropagation()">View Pull Request →</a><button class="rollback-btn" onclick="event.stopPropagation();rollback(${issue.number})"> Rollback</button>`;
     }
     card.innerHTML = `
       <div class="issue-number">#${issue.number} · ${issue.file}</div>
@@ -664,7 +573,7 @@ function renderCol(colId, issues, status) {
       <div class="tag-row">
         <span class="tag tag-bug">bug</span>
         <span class="tag tag-${risk}">${risk} risk</span>
-        ${issue.classification.safe_for_autofix ? '<span class="tag tag-auto">auto-fix</span>' : '<span class="tag tag-manual">manual</span>'}
+        ${issue.classification.safe_for_autofix ? '<span class="tag tag-auto">auto-fix</span>' : '<span class="tag tag-medium">review</span>'}
       </div>
       <div class="issue-time">${timeAgo(issue.created_at)}</div>
       ${extra}`;
@@ -697,24 +606,16 @@ function renderAuditLog() {
 function buildLocalAudit() {
   const entries = [];
   issuesData.forEach(issue => {
-    if (issue.status !== "new") {
-      entries.push({ timestamp: issue.updated_at||issue.created_at, actor:"IssueFlow", action:"scope_dispatched", issue:issue.number, detail:`#${issue.number} ${issue.title}` });
-    }
-    if (["awaiting_approval","fixing","pr_open"].includes(issue.status)) {
-      entries.push({ timestamp: issue.updated_at||issue.created_at, actor:"Devin", action:"scope_complete", issue:issue.number, detail:"Scoping report ready" });
-    }
-    if (issue.status === "fixing" || issue.status === "pr_open") {
-      entries.push({ timestamp: issue.updated_at||issue.created_at, actor:"engineer", action:"approved_autofix", issue:issue.number, detail:"" });
-    }
-    if (issue.status === "pr_open") {
-      entries.push({ timestamp: issue.updated_at||issue.created_at, actor:"Devin", action:"pr_opened", issue:issue.number, detail:issue.pr_url||"PR pending" });
-    }
+    if (issue.status !== "new") entries.push({ timestamp: issue.updated_at||issue.created_at, actor:"IssueFlow", action:"scope_dispatched", issue:issue.number, detail:`` });
+    if (["awaiting_approval","fixing","pr_open"].includes(issue.status)) entries.push({ timestamp: issue.updated_at||issue.created_at, actor:"Devin", action:"scope_complete", issue:issue.number, detail:"Scoping report ready" });
+    if (issue.status === "fixing" || issue.status === "pr_open") entries.push({ timestamp: issue.updated_at||issue.created_at, actor:"engineer", action:"approved_autofix", issue:issue.number, detail:"" });
+    if (issue.status === "pr_open") entries.push({ timestamp: issue.updated_at||issue.created_at, actor:"Devin", action:"pr_opened", issue:issue.number, detail:issue.pr_url||"PR pending" });
   });
   return entries.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
 }
 
 function iconFor(a) {
-  return {scope_dispatched:"🔍",scope_complete:"📋",approved_autofix:"✅",approved_review:"👁",marked_manual:"📌",pr_opened:"🌿",rolled_back:"⏪"}[a] || "•";
+  return {scope_dispatched:"→",scope_complete:"→",approved_autofix:"→",approved_review:"→",marked_manual:"→",pr_opened:"→",rolled_back:"→"}[a] || "•";
 }
 
 function fmtAudit(e) {
@@ -731,9 +632,6 @@ function fmtAudit(e) {
   }
 }
 
-// ============================================================
-// MODAL
-// ============================================================
 function openModal(issue) {
   currentModal = issue;
   document.getElementById("modal-num").textContent   = `#${issue.number} · ${issue.file} · ${issue.status.replace(/_/g," ")}`;
@@ -759,9 +657,9 @@ function openModal(issue) {
 
   const linkEl = document.getElementById("modal-devin-link");
   if (issue.status === "fixing" && issue.fix_session_id) {
-    linkEl.innerHTML = `<a class="devin-link" href="https://app.devin.ai/sessions/${issue.fix_session_id}" target="_blank">↗ View Devin fix session</a>`;
+    linkEl.innerHTML = `<a class="devin-link" href="https://app.devin.ai/sessions/${issue.fix_session_id}" target="_blank">View Devin fix session →</a>`;
   } else if (issue.scope_session_id && !issue.scope_session_id.startsWith("dry-run")) {
-    linkEl.innerHTML = `<a class="devin-link" href="https://app.devin.ai/sessions/${issue.scope_session_id}" target="_blank">↗ View Devin scoping session</a>`;
+    linkEl.innerHTML = `<a class="devin-link" href="https://app.devin.ai/sessions/${issue.scope_session_id}" target="_blank">View Devin scoping session →</a>`;
   } else {
     linkEl.innerHTML = "";
   }
@@ -771,9 +669,9 @@ function openModal(issue) {
     actEl.innerHTML = `
       <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:18px;margin-bottom:10px;letter-spacing:.08em;text-transform:uppercase">Your Decision</div>
       <div class="decision-row">
-        <button class="btn-autofix" onclick="decide('autofix')">✓ Approve Auto-Fix</button>
-        <button class="btn-review"  onclick="decide('review')">👁 Fix with Review</button>
-        <button class="btn-manual"  onclick="decide('manual')">— Handle Manually</button>
+        <button class="btn-autofix" onclick="decide('autofix')"> Approve Auto-Fix</button>
+        <button class="btn-review"  onclick="decide('review')"> Fix with Review</button>
+        <button class="btn-manual"  onclick="decide('manual')"> Handle Manually</button>
       </div>
       <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:12px;line-height:1.6">
         <strong style="color:var(--accent)">Auto-Fix</strong> — Devin fixes, tests, opens PR. Low-risk issues only.<br>
@@ -784,8 +682,8 @@ function openModal(issue) {
     const prHref = issue.pr_url || `https://github.com/${GITHUB_REPO}/pulls`;
     actEl.innerHTML = `
       <div style="margin-top:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-        <a class="devin-link" href="${prHref}" target="_blank" style="font-size:13px">↗ View Pull Request</a>
-        <button class="rollback-btn" style="width:auto;padding:8px 16px;margin:0" onclick="rollback(${issue.number})">⏪ Rollback</button>
+        <a class="devin-link" href="${prHref}" target="_blank" style="font-size:13px">View Pull Request →</a>
+        <button class="rollback-btn" style="width:auto;padding:8px 16px;margin:0" onclick="rollback(${issue.number})"> Rollback</button>
       </div>`;
   } else {
     actEl.innerHTML = "";
@@ -798,9 +696,9 @@ async function decide(mode) {
   if (!currentModal) return;
   const issue = currentModal;
 
-  // Immediately update local state and re-render so buttons disappear right away
   issue.status = mode === "manual" ? "manual" : "fixing";
   issue.fix_session_id = null;
+  approvalCooldownUntil = Date.now() + 30000;
   closeModal();
   renderStats();
   renderPipeline();
@@ -809,9 +707,9 @@ async function decide(mode) {
 
   if (mode === "manual") {
     await ghPost(`/issues/${issue.number}/comments`, {
-      body: `📌 **IssueFlow:** Issue #${issue.number} marked for **manual handling** by an engineer. No automated fix will be dispatched.`
+      body: `**IssueFlow:** Issue #${issue.number} marked for **manual handling** by an engineer. No automated fix will be dispatched.`
     });
-    showToast(`📌 Issue #${issue.number} marked manual`);
+    showToast(`Issue #${issue.number} marked manual`);
     pushAudit("marked_manual", issue.number, "engineer");
     return;
   }
@@ -825,24 +723,23 @@ async function decide(mode) {
       if (sessionId) {
         showSessionLink(issue.number, sessionId);
       } else {
-        showToast(`✅ Issue #${issue.number} dispatched — Devin is fixing`);
+        showToast(`Issue #${issue.number} dispatched — Devin is fixing`);
       }
       pushAudit(`approved_${mode}`, issue.number, "engineer");
     } else {
       issue.status = "awaiting_approval";
       renderStats();
       renderPipeline();
-      showToast("❌ Backend error. Is process_issues.py --serve running?", 4500);
+      showToast("Backend error — is process_issues.py --serve running?", 4500);
     }
   } else {
     const label = mode === "autofix" ? "Auto-Fix" : "Fix with Review";
     await ghPost(`/issues/${issue.number}/comments`, {
       body: `✅ **IssueFlow Stage 2 — Fix Approved** (\`${mode}\` mode)\n\nAn engineer has reviewed the scoping report and approved **${label}** for this issue.\n\n**Next step:** Run \`python process_issues.py --approve ${issue.number} --mode ${mode}\` to dispatch Devin.\n\n${mode==="review" ? "⚠ This PR will require human review before merging." : "✅ Devin will open a PR once all tests pass."}`
     });
-    showToast(`✅ Approval posted to GitHub #${issue.number}`);
+    showToast(`Approval posted to GitHub #${issue.number}`);
     pushAudit(`approved_${mode}`, issue.number, "engineer");
   }
-  setTimeout(loadAll, 2000);
 }
 
 async function rollback(num) {
@@ -850,12 +747,12 @@ async function rollback(num) {
   const alive = await backendAlive();
   if (alive) {
     const ok = await apiCall("/rollback", { issue_number: num, actor: "engineer" });
-    showToast(ok ? `⏪ Rolled back #${num}` : "❌ Rollback failed — check terminal", ok ? 3000 : 4500);
+    showToast(ok ? `Rolled back #${num}` : "Rollback failed — check terminal", ok ? 3000 : 4500);
   } else {
     await ghPost(`/issues/${num}/comments`, {
       body: `⏪ **IssueFlow Rollback Requested**\n\nAn engineer has requested a rollback.\n\nRun: \`python process_issues.py --rollback ${num}\``
     });
-    showToast(`⏪ Rollback comment posted to #${num}`);
+    showToast(`Rollback comment posted to #${num}`);
   }
   pushAudit("rolled_back", num, "engineer");
   setTimeout(loadAll, 1800);
@@ -868,63 +765,57 @@ function pushAudit(action, issue, actor) {
 
 async function scopeSingle() {
   const num = parseInt(document.getElementById("input-scope-issue").value);
-  if (!num) { showToast("❌ Enter an issue number", 3000); return; }
+  if (!num) { showToast("Enter an issue number", 3000); return; }
   const alive = await backendAlive();
-  if (!alive) { showToast("❌ Backend not running. Start with: python process_issues.py --serve", 5000); return; }
+  if (!alive) { showToast("Backend not running — start with: python process_issues.py --serve", 5000); return; }
 
-  // Optimistically move the issue to scoping immediately
   const issue = issuesData.find(i => i.number === num);
   if (issue) { issue.status = "scoping"; renderStats(); renderPipeline(); }
 
   const ok = await apiCall("/scope", { issue_number: num });
   if (ok) {
-    // Populate session ID immediately so the link appears on the card
     if (ok.session_id && issue) {
       issue.scope_session_id = ok.session_id;
       renderPipeline();
       showSessionLink(num, ok.session_id);
     } else {
-      showToast(`🔍 Scoping session dispatched for #${num}`);
+      showToast(`Scoping session dispatched for #${num}`);
     }
     pushAudit("scope_dispatched", num, "IssueFlow");
-    setTimeout(loadAll, 2000);
   } else {
     if (issue) { issue.status = "new"; renderStats(); renderPipeline(); }
-    showToast(`❌ Failed to scope #${num} — check terminal`, 4000);
+    showToast(`Failed to scope #${num} — check terminal`, 4000);
   }
 }
 
 async function approveFromCmd() {
   const num  = parseInt(document.getElementById("input-approve-issue").value);
   const mode = document.getElementById("input-approve-mode").value;
-  if (!num) { showToast("❌ Enter an issue number", 3000); return; }
+  if (!num) { showToast("Enter an issue number", 3000); return; }
   const alive = await backendAlive();
-  if (!alive) { showToast("❌ Backend not running. Start with: python process_issues.py --serve", 5000); return; }
+  if (!alive) { showToast("Backend not running — start with: python process_issues.py --serve", 5000); return; }
   const issue = issuesData.find(i => i.number === num);
   const ok = await apiCall("/approve", { issue_number: num, mode, scope_report: issue?.scope_report || "", actor: "engineer" });
   if (ok) {
-    showToast(`✅ Issue #${num} approved (${mode}) — Devin dispatched`);
+    showToast(`Issue #${num} approved (${mode}) — Devin dispatched`);
     pushAudit(`approved_${mode}`, num, "engineer");
     setTimeout(loadAll, 1800);
   } else {
-    showToast(`❌ Approval failed for #${num} — check terminal`, 4000);
+    showToast(`Approval failed for #${num} — check terminal`, 4000);
   }
 }
 
 async function rollbackFromCmd() {
   const num = parseInt(document.getElementById("input-rollback-issue").value);
-  if (!num) { showToast("❌ Enter an issue number", 3000); return; }
+  if (!num) { showToast("Enter an issue number", 3000); return; }
   if (!confirm(`Roll back issue #${num}? This will close the PR and reopen the issue.`)) return;
   await rollback(num);
 }
 
 async function runDryRun() {
   const alive = await backendAlive();
-  if (!alive) {
-    showToast("❌ Backend not running — dry run must be triggered from CLI", 5000);
-    return;
-  }
-  showToast("👁 Dry run: open terminal and run: python process_issues.py --scan --dry-run", 6000);
+  if (!alive) { showToast("Backend not running — dry run must be triggered from CLI", 5000); return; }
+  showToast("Dry run: open terminal and run: python process_issues.py --scan --dry-run", 6000);
 }
 
 async function checkBackend() {
@@ -932,13 +823,11 @@ async function checkBackend() {
   btn.disabled = true; btn.textContent = "Checking…";
   const alive = await backendAlive();
   if (alive) {
-    showToast("✅ Backend is running at localhost:5000", 3000);
-    btn.textContent = "✅ Online";
-    btn.style.color = "var(--green)";
+    showToast("Backend is running at localhost:5000", 3000);
+    btn.textContent = "Online"; btn.style.color = "var(--green)";
   } else {
-    showToast("❌ Backend offline — run: python process_issues.py --serve", 5000);
-    btn.textContent = "❌ Offline";
-    btn.style.color = "var(--red)";
+    showToast("Backend offline — run: python process_issues.py --serve", 5000);
+    btn.textContent = "Offline"; btn.style.color = "var(--red)";
   }
   setTimeout(() => { btn.disabled = false; btn.textContent = "⚙ Check Status"; btn.style.color = ""; }, 4000);
 }
@@ -946,9 +835,6 @@ async function checkBackend() {
 function closeModal() { document.getElementById("modal").classList.remove("open"); }
 function maybeCloseModal(e) { if (e.target===document.getElementById("modal")) closeModal(); }
 
-// ============================================================
-// UTILS
-// ============================================================
 function timeAgo(iso) {
   if (!iso) return "—";
   const s = (Date.now()-new Date(iso))/1000;
@@ -960,20 +846,17 @@ function timeAgo(iso) {
 
 function showSessionLink(issueNumber, sessionId) {
   const t = document.getElementById("toast");
-  t.innerHTML = `✅ Issue #${issueNumber} dispatched — <a href="https://app.devin.ai/sessions/${sessionId}" target="_blank" style="color:var(--accent);text-decoration:underline">↗ View Devin session</a>`;
+  t.innerHTML = `Issue #${issueNumber} dispatched — <a href="https://app.devin.ai/sessions/${sessionId}" target="_blank" style="color:var(--accent);text-decoration:underline">View Devin session →</a>`;
   t.classList.remove("hidden");
   setTimeout(() => t.classList.add("hidden"), 8000);
 }
 
 function showToast(msg, ms=3000) {
-  const t=document.getElementById("toast");
-  t.textContent=msg; t.classList.remove("hidden");
-  setTimeout(()=>t.classList.add("hidden"),ms);
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.remove("hidden");
+  setTimeout(() => t.classList.add("hidden"), ms);
 }
 
-// ============================================================
-// AUTO REFRESH + INIT
-// ============================================================
 setInterval(loadAll, 60000);
 if (GITHUB_TOKEN) loadAll();
 </script>
