@@ -15,7 +15,9 @@ def calculate_interest(principal, rate, years):
 
 
 def apply_discount(price, discount_pct):
-    """Apply a percentage discount to a price. BUG: Doesn't clamp discount to 0-100."""
+    """Apply a percentage discount to a price."""
+    if discount_pct < 0 or discount_pct > 100:
+        raise ValueError("Discount must be between 0 and 100")
     return price - (price * discount_pct / 100)
 
 
