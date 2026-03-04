@@ -11,6 +11,10 @@ def divide(a, b):
 
 def calculate_interest(principal, rate, years):
     """Calculate simple interest. BUG: Doesn't validate negative inputs."""
+    if principal < 0:
+        raise ValueError("Principal must be non-negative")
+    if rate < 0:
+        raise ValueError("Rate must be non-negative")
     return principal * rate * years
 
 
