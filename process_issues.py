@@ -239,7 +239,7 @@ def build_fix_prompt(issue, scope_report, mode):
 
 Issue #{issue['number']}: {issue['title']}
 
-A scoping report was reviewed and approved by the engineering team:
+A scoping report was reviewed and approved by the engineering team. You previously performed this scoping analysis — use your prior understanding of the codebase to implement the fix efficiently:
 
 {scope_report}
 
@@ -498,7 +498,13 @@ def run_server():
             for issue in issues:
                 if str(issue["number"]) not in state["issues"]:
                     dispatch_scope_session(issue)
-            return jsonify({"ok": True, "scanned": len(issues)})
+            # Return session IDs so dashboard can show links immediately
+            state = load_state()
+            sessions = {
+                num: entry.get("scope_session_id")
+                for num, entry in state["issues"].items()
+            }
+            return jsonify({"ok": True, "scanned": len(issues), "sessions": sessions})
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
@@ -533,7 +539,10 @@ def run_server():
         try:
             issue = get_single_issue(data["issue_number"])
             dispatch_scope_session(issue)
-            return jsonify({"ok": True})
+            # Return session ID for immediate link display
+            state = load_state()
+            session_id = state["issues"].get(str(data["issue_number"]), {}).get("scope_session_id")
+            return jsonify({"ok": True, "session_id": session_id})
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
