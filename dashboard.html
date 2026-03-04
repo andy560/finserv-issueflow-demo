@@ -626,7 +626,10 @@ function renderCol(colId, issues, status) {
       extra = `<div class="awaiting-badge">Click to review &amp; approve →</div>`;
     }
     if (status === "fixing") {
-      extra = `<div class="progress-wrap"><div class="progress-label"><span>Devin working…</span><span>⚙</span></div><div class="progress-bar"><div class="progress-fill" style="width:60%"></div></div></div>`;
+      const fixLink = issue.fix_session_id
+        ? `<a class="pr-link" style="color:var(--purple)" href="https://app.devin.ai/sessions/${issue.fix_session_id}" target="_blank">↗ View Devin fix session</a>`
+        : `<div style="margin-top:6px;font-family:var(--font-mono);font-size:10px;color:var(--purple)">⏳ Session starting…</div>`;
+      extra = `<div class="progress-wrap"><div class="progress-label"><span>Devin working…</span><span>⚙</span></div><div class="progress-bar"><div class="progress-fill" style="width:60%"></div></div></div>${fixLink}`;
     }
     if (status === "pr_open") {
       const prHref = issue.pr_url || `https://github.com/${GITHUB_REPO}/pulls`;
@@ -732,9 +735,13 @@ function openModal(issue) {
     `Reason: ${cls.reason}\nComplexity: ${cls.complexity}   File: ${issue.file}`;
 
   const linkEl = document.getElementById("modal-devin-link");
-  linkEl.innerHTML = issue.scope_session_id && !issue.scope_session_id.startsWith("dry-run")
-    ? `<a class="devin-link" href="https://app.devin.ai/sessions/${issue.scope_session_id}" target="_blank">↗ View Devin scoping session</a>`
-    : "";
+  if (issue.status === "fixing" && issue.fix_session_id) {
+    linkEl.innerHTML = `<a class="devin-link" href="https://app.devin.ai/sessions/${issue.fix_session_id}" target="_blank">↗ View Devin fix session</a>`;
+  } else if (issue.scope_session_id && !issue.scope_session_id.startsWith("dry-run")) {
+    linkEl.innerHTML = `<a class="devin-link" href="https://app.devin.ai/sessions/${issue.scope_session_id}" target="_blank">↗ View Devin scoping session</a>`;
+  } else {
+    linkEl.innerHTML = "";
+  }
 
   const actEl = document.getElementById("modal-actions");
   if (issue.status === "awaiting_approval") {
@@ -767,7 +774,13 @@ function openModal(issue) {
 async function decide(mode) {
   if (!currentModal) return;
   const issue = currentModal;
+
+  // Immediately update local state and re-render so buttons disappear right away
+  issue.status = mode === "manual" ? "manual" : "fixing";
+  issue.fix_session_id = null; // will be populated after API call
   closeModal();
+  renderStats();
+  renderPipeline();
 
   const alive = await backendAlive();
 
@@ -783,13 +796,24 @@ async function decide(mode) {
   if (alive) {
     const ok = await apiCall("/approve", { issue_number: issue.number, mode, scope_report: issue.scope_report, actor: "engineer" });
     if (ok) {
-      showToast(`✅ Issue #${issue.number} approved (${mode}) — Devin dispatched`);
+      // Store session ID and show link in a toast with clickable link
+      const sessionId = ok.session_id;
+      issue.fix_session_id = sessionId;
+      renderPipeline();
+      showToast(`✅ Issue #${issue.number} dispatched — Devin is fixing`);
+      if (sessionId) {
+        // Show a persistent session link banner
+        showSessionLink(issue.number, sessionId);
+      }
       pushAudit(`approved_${mode}`, issue.number, "engineer");
     } else {
+      // Revert status if call failed
+      issue.status = "awaiting_approval";
+      renderStats();
+      renderPipeline();
       showToast("❌ Backend error. Is process_issues.py --serve running?", 4500);
     }
   } else {
-    // Post approval comment to GitHub — engineer can then run CLI to dispatch
     const label = mode === "autofix" ? "Auto-Fix" : "Fix with Review";
     await ghPost(`/issues/${issue.number}/comments`, {
       body: `✅ **IssueFlow Stage 2 — Fix Approved** (\`${mode}\` mode)\n\nAn engineer has reviewed the scoping report and approved **${label}** for this issue.\n\n**Next step:** Run \`python process_issues.py --approve ${issue.number} --mode ${mode}\` to dispatch Devin.\n\n${mode==="review" ? "⚠ This PR will require human review before merging." : "✅ Devin will open a PR once all tests pass."}`
@@ -797,7 +821,7 @@ async function decide(mode) {
     showToast(`✅ Approval posted to GitHub #${issue.number}`);
     pushAudit(`approved_${mode}`, issue.number, "engineer");
   }
-  setTimeout(loadAll, 1800);
+  setTimeout(loadAll, 2000);
 }
 
 async function rollback(num) {
@@ -899,6 +923,13 @@ function timeAgo(iso) {
   if (s<3600)  return `${Math.floor(s/60)}m ago`;
   if (s<86400) return `${Math.floor(s/3600)}h ago`;
   return `${Math.floor(s/86400)}d ago`;
+}
+
+function showSessionLink(issueNumber, sessionId) {
+  const t = document.getElementById("toast");
+  t.innerHTML = `✅ Issue #${issueNumber} dispatched — <a href="https://app.devin.ai/sessions/${sessionId}" target="_blank" style="color:var(--accent);text-decoration:underline">↗ View Devin session</a>`;
+  t.classList.remove("hidden");
+  setTimeout(() => t.classList.add("hidden"), 8000);
 }
 
 function showToast(msg, ms=3000) {

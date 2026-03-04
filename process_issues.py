@@ -223,7 +223,6 @@ Explore the repository and produce a structured scoping report using EXACTLY thi
 [Your estimate in minutes.]
 
 Be concise. Do not write any code. Do not make any commits or file changes.
-When your analysis is complete, post the full scoping report as a comment on GitHub issue #{issue['number']} in the repository {GITHUB_REPO}.
 """
 
 # ============================================================
@@ -510,7 +509,9 @@ def run_server():
                 scope_report=data.get("scope_report"),
                 actor=data.get("actor", "engineer")
             )
-            return jsonify({"ok": True})
+            state = load_state()
+            session_id = state["issues"].get(str(data["issue_number"]), {}).get("fix_session_id")
+            return jsonify({"ok": True, "session_id": session_id})
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
