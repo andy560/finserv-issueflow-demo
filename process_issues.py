@@ -223,6 +223,7 @@ Explore the repository and produce a structured scoping report using EXACTLY thi
 [Your estimate in minutes.]
 
 Be concise. Do not write any code. Do not make any commits or file changes.
+When your analysis is complete, post the full scoping report as a comment on GitHub issue #{issue['number']} in the repository {GITHUB_REPO}.
 """
 
 # ============================================================
