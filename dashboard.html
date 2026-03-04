@@ -502,7 +502,7 @@ function parseStatus(comments) {
       const m = b.match(/sessions\/([\w-]+)/g);
       if (m && m.length > 1) fix_session_id = m[1].replace("sessions/","");
     }
-    if (b.includes("pull request") || b.includes("PR #") || b.includes("PR opened")) {
+    if (b.includes("IssueFlow: PR opened") || b.includes("pull request") || b.includes("PR #")) {
       status = "pr_open";
       const m = b.match(/https:\/\/github\.com\/[^\s)]+\/pull\/\d+/);
       if (m) pr_url = m[0];

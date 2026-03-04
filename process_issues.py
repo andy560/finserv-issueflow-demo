@@ -250,6 +250,8 @@ A scoping report was reviewed and approved by the engineering team:
 4. All tests must pass. Do NOT modify any test files.
 5. Commit: "fix: resolve issue #{issue['number']} - {issue['title']}"
 6. Push branch and open a pull request referencing issue #{issue['number']}.
+7. Once the pull request is open, post a comment on GitHub issue #{issue['number']} in repository {GITHUB_REPO} with this exact text:
+   IssueFlow: PR opened — [paste the full PR URL here]
 
 ## PR Description — write it like a real engineer, plain English, under 150 words:
 - What was broken and why (one sentence)
